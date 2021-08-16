@@ -1,5 +1,5 @@
 """
-ASGI config for who_goes_there project.
+ASGI config for wgt_backend project.
 
 It exposes the ASGI callable as a module-level variable named ``application``.
 
@@ -11,6 +11,6 @@ import os
 
 from django.core.asgi import get_asgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'who_goes_there.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'wgt_backend.settings')
 
 application = get_asgi_application()

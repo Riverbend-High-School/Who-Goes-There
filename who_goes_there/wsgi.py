@@ -1,5 +1,5 @@
 """
-WSGI config for who_goes_there project.
+WSGI config for wgt_backend project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 
@@ -11,6 +11,6 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'who_goes_there.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'wgt_backend.settings')
 
 application = get_wsgi_application()

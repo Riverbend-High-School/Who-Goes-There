@@ -63,24 +63,26 @@ INSTALLED_APPS = [
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
-        'who_goes_there.authentication.TokenAuthSupportQueryString'
+        'wgt_backend.authentication.TokenAuthSupportQueryString'
     ],
 }
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
 ]
 
 CORS_ALLOWED_ORIGINS = [
     'https://wgt.gabrielhogan.com',
     'http://wgt.gabrielhogan.devel',
-    'https://api-wgt.gabrielhogan.com'
+    'https://api-wgt.gabrielhogan.com',
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
 ]
 
 CORS_ALLOW_HEADERS = [
@@ -96,7 +98,7 @@ CORS_ALLOW_HEADERS = [
     'x-requested-with',
 ]
 
-ROOT_URLCONF = 'who_goes_there.urls'
+ROOT_URLCONF = 'wgt_backend.urls'
 
 TEMPLATES = [
     {
@@ -114,7 +116,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'who_goes_there.wsgi.application'
+WSGI_APPLICATION = 'wgt_backend.wsgi.application'
 
 
 # Database

@@ -3,7 +3,7 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
 
-# from who_goes_there.scheduler import start_scheduler
+# from wgt_backend.scheduler import start_scheduler
 
 urlpatterns = [
     # Django Stuff
