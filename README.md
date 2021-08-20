@@ -1,4 +1,4 @@
-![Riverbend High School](https://i.imgur.com/kvyId31t.png)
+![Riverbend High School](https://www.spotsylvania.k12.va.us/cms/lib/VA01918722/Centricity/Template/GlobalAssets/images///logos/RHS.png)
 
 # **RHS Library Who Goes There?** Django REST API
 
