@@ -26,6 +26,18 @@ class VisitListView(APIView):
         serializer = VisitSerializer(visits, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+class ActiveVisitListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        """
+        Get list of all active visits.
+        """
+        visits = Visit.objects.filter(end=None)
+
+        serializer = VisitSerializer(visits, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 class SignInView(APIView):
     def post(self, request):
         """
