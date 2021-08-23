@@ -10,17 +10,15 @@ class Visit(models.Model):
     # Time Fields
     start = models.DateTimeField()
     end = models.DateTimeField(blank=True, null=True)
+    duration = models.DurationField(blank=True, null=True)
 
     # Misc Fields
     visit_reason = models.TextField(blank=True)
 
     def end_visit(self):
         self.end = datetime.now()
+        self.duration = self.start - self.end
         self.save()
-
-    @property
-    def duration(self):
-        return self.end - self.start
 
     def __str__(self):
         return f"{self.student} | {self.start} -> {self.end}"
