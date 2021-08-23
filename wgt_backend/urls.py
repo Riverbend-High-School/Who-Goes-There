@@ -12,7 +12,8 @@ urlpatterns = [
     # Project Apps
     path('core/', include('apps.core.urls')),
     path('students/', include('apps.students.urls')),
-    path('visits/', include('apps.visits.urls'))
+    path('visits/', include('apps.visits.urls')),
+    path('statistics/', include('apps.statistics.urls')),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

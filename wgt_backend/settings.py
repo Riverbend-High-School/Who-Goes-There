@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     'apps.core',
     'apps.students',
     'apps.visits',
+    'apps.statistics',
 ]
 
 REST_FRAMEWORK = {
