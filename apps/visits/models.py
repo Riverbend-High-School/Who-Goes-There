@@ -16,6 +16,10 @@ class Visit(models.Model):
     # Misc Fields
     visit_reason = models.TextField(blank=True)
 
+    @property
+    def student_info(self):
+        return f"{self.student.name} ({self.student.student_id})"
+
     def end_visit(self):
         self.end = timezone.now()
         self.duration = self.end - self.start

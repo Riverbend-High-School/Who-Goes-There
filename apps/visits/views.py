@@ -34,5 +34,5 @@ class ActiveVisitListView(APIView):
         """
         visits = Visit.objects.filter(end=None)
 
-        serializer = VisitSerializer(visits, many=True)
+        serializer = ActiveVisitSerializer(visits, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
