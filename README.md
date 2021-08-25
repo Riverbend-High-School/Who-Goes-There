@@ -46,7 +46,7 @@ All commands assume that you are at the root of the `wgt-backend` repository tha
 
 4. Create database tables.
     ```
-    python manage.py makemigrations core students visits
+    python manage.py makemigrations core students visits portals
     python manage.py migrate
     ```
 
