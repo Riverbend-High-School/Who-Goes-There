@@ -1,5 +1,6 @@
 from django.db import models
 from datetime import datetime
+from django.utils import timezone
 
 from ..students.models import Student
 
@@ -16,8 +17,8 @@ class Visit(models.Model):
     visit_reason = models.TextField(blank=True)
 
     def end_visit(self):
-        self.end = datetime.now()
-        self.duration = self.start - self.end
+        self.end = timezone.now()
+        self.duration = self.end - self.start
         self.save()
 
     def __str__(self):

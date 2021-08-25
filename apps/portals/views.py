@@ -24,7 +24,7 @@ class SignInView(APIView):
         except Student.DoesNotExist:
             return Response({"detail": "Student not found."}, status=status.HTTP_404_NOT_FOUND)
 
-        serializer = VisitSerializer(data={'student': student.id, 'start': datetime.now()})
+        serializer = VisitSerializer(data={'student': student.id, 'start': timezone.now()})
 
         if serializer.is_valid():
             serializer.save()
