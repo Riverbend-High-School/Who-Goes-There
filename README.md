@@ -56,7 +56,8 @@ All commands assume that you are at the root of the `wgt-backend` repository tha
     ```
 
 ## Authentication
-Authentication with the REST API is done through **JSON Web Tokens**. Please note that JWTs are not encrypted and may contain sensitive information.
+Authentication with the REST API is currently done through **API Tokens**.
+The plan in the near future is to update and move to JWTs (JSON Web Tokens).
 
 ## License
 Distributed under the GPLv3 License. See [LICENSE](LICENSE) for more information.
