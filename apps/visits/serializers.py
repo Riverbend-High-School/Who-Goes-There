@@ -11,8 +11,10 @@ class VisitSerializer(serializers.ModelSerializer):
 
 class ActiveVisitSerializer(serializers.ModelSerializer):
     student_info = serializers.ReadOnlyField()
+    start_simple = serializers.ReadOnlyField()
+    unix_time = serializers.ReadOnlyField()
 
     class Meta:
         model = Visit
-        fields = ['student_info', 'start']
+        fields = ['student_info', 'start', 'start_simple', 'unix_time']
 

@@ -1,6 +1,7 @@
 from django.db import models
 from datetime import datetime
 from django.utils import timezone
+from django.utils.dateformat import format
 
 from ..students.models import Student
 
@@ -19,6 +20,15 @@ class Visit(models.Model):
     @property
     def student_info(self):
         return f"{self.student.name} ({self.student.student_id})"
+
+    @property
+    def start_simple(self):
+        stime = self.start.strftime("%H:%M:%S")
+        return f"{stime}"
+    
+    @property
+    def unix_time(self):
+        return format(self.start, 'U')
 
     def end_visit(self):
         self.end = timezone.now()
