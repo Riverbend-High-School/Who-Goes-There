@@ -2,18 +2,17 @@ extern crate diesel;
 
 use crate::model::*;
 use rocket::http::Status;
-use rocket::http::{Cookie, CookieJar};
 use rocket::request::{self, FromRequest, Request};
-use rocket::response::{Flash, Redirect};
 use rocket::response::content::Json;
+use serde_json::json;
 
 use self::diesel::prelude::*;
 
 #[derive(Clone, PartialEq)]
-struct api_key(String);
+pub struct api_key(String);
 
 #[derive(Debug)]
-enum ApiKeyError {
+pub enum ApiKeyError {
     Missing,
     Invalid,
 }
@@ -23,24 +22,29 @@ impl<'r> FromRequest<'r> for api_key {
     type Error = ApiKeyError;
 
     async fn from_request(req: &'r Request<'_>) -> request::Outcome<Self, Self::Error> {
-        let keys: Vec<_> = req.headers().get("x-api-key").collect();
-        match keys.len() {
-            0 => request::Outcome::Failure((Status::BadRequest, ApiKeyError::Missing)),
-            1 if validate_token(keys[0].to_owned()) => {
-                request::Outcome::Success(api_key(keys[0].to_string()))
-            }
-            _ => request::Outcome::Failure((Status::BadRequest, ApiKeyError::Invalid)),
+        let key = req.query_value::<&str>("token");
+
+        match key {
+            Some(r) => match r {
+                Ok(s) if validate_token(s.to_owned()).await => {
+                    request::Outcome::Success(api_key(s.to_owned()))
+                },
+                _ => request::Outcome::Failure((Status::BadRequest, ApiKeyError::Invalid)),
+            },
+            None => request::Outcome::Failure((Status::BadRequest, ApiKeyError::Missing)),
         }
     }
 }
 
 // http://0.0.0.0/login?token=someSecretKeyHere
 
+#[get("/login")]
+pub async fn login(_key : api_key) -> Status {
+    Status::Ok
+}
+
 pub async fn validate_token(token: String) -> bool {
-    match get_user(token).await {
-        Some(b) if b => true,
-        _ => false,
-    }
+    get_user(token).await.is_some()
 }
 
 pub async fn get_user(token: String) -> Option<users_with_id> {
@@ -65,9 +69,16 @@ pub async fn get_user(token: String) -> Option<users_with_id> {
 }
 
 #[get("/me")]
-pub async fn me(key: api_key) -> rocket::response::content::Json<users_with_id> {
+pub async fn me(key: api_key) -> rocket::response::content::Json<String> {
     match get_user(key.0).await {
-        Some(u) => Json(u),
-        None => Json::default(),
+        Some(u) => Json(json!({
+            "status": 200,
+            "message": "Found",
+            "data": u
+        }).to_string()),
+        None => Json(json!({
+            "status": 400,
+            "message": "Bad Request",
+        }).to_string()),
     }
 }

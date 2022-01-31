@@ -1,3 +1,6 @@
+#![allow(non_camel_case_types)]
+
+
 #[macro_use]
 extern crate rocket;
 
@@ -10,16 +13,9 @@ pub mod schema;
 
 use diesel::prelude::*;
 use dotenv::dotenv;
-use rocket::{
-    fs::NamedFile,
-    futures::lock::Mutex,
-    http::{ContentType, Cookie, CookieJar, Method, Status},
-    response,
-    serde::{Deserialize, Serialize},
-};
+use rocket::fs::NamedFile;
 use std::{
     env,
-    ops::Deref,
     path::{Path, PathBuf},
 };
 
@@ -39,7 +35,7 @@ async fn main() {
 
     // Starting rocket
     match rocket::build()
-        .mount("/", routes![index, files,])
+        .mount("/", routes![index, files, auth::login])
         .launch()
         .await
     {
