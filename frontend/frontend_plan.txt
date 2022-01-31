@@ -1,0 +1,24 @@
+The 'Ms.Price' page:
+    -A list of active sessions
+        -Shows how long student has been in the library
+        -Shows special info about student (requires permissions to check out books, etc...)
+    -Force sign-out button
+    -Sign-out all button
+
+Active students page:
+    -Shows all students in the library for general teacher use
+        -If a student says they're going to the library, it'll be used to verify student arrived and for how long
+
+Prior student check in page:
+    -Shows log of students queriable by teachers
+
+Student frontend:
+    -Enter email prefix/student ID
+    -Sign-out
+
+
+
+Dashboard View:
+    - Top Visitors
+    - Total Visit Today (Like Combined user time?)
+    - 
