@@ -1,7 +1,9 @@
 ----Start backend
 ----Start frontend
+---Implement endpoints
 ---Implement student frontend
 --Implement Ms.Price page active sessions on frontend and backend
+--Make response macro that generates a Json<String> to standardize api response
 -Implement public active students page
 -Implement student log
 Implement dashboard view

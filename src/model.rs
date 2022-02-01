@@ -5,18 +5,31 @@ use rocket::serde::{Deserialize, Serialize};
 #[derive(Queryable, Clone, PartialEq, PartialOrd, Serialize, Deserialize)]
 pub struct students_with_id {
     pub id: i32,
-    pub student_id: String,
+    pub seven_id: String,
     pub student_name: String,
     pub email: String,
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
     pub is_aide: bool,
 }
+impl Default for students_with_id {
+    fn default() -> Self {
+        Self {
+            id: Default::default(),
+            seven_id: Default::default(),
+            student_name: Default::default(),
+            email: Default::default(),
+            created_at: NaiveDateTime::from_timestamp(0, 0),
+            updated_at: NaiveDateTime::from_timestamp(0, 0),
+            is_aide: Default::default(),
+        }
+    }
+}
 
 #[derive(Insertable, Clone, PartialEq, PartialOrd, Serialize, Deserialize)]
 #[table_name = "students"]
 pub struct students_without_id {
-    pub student_id: String,
+    pub seven_id: String,
     pub student_name: String,
     pub email: String,
     pub created_at: NaiveDateTime,

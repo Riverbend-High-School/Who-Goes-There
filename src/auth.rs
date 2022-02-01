@@ -9,7 +9,7 @@ use serde_json::json;
 use self::diesel::prelude::*;
 
 #[derive(Clone, PartialEq)]
-pub struct api_key(String);
+pub struct api_key(pub String);
 
 #[derive(Debug)]
 pub enum ApiKeyError {
@@ -29,18 +29,23 @@ impl<'r> FromRequest<'r> for api_key {
                 Ok(s) if validate_token(s.to_owned()).await => {
                     request::Outcome::Success(api_key(s.to_owned()))
                 },
-                _ => request::Outcome::Failure((Status::BadRequest, ApiKeyError::Invalid)),
+                _ => request::Outcome::Failure((Status::Unauthorized, ApiKeyError::Invalid)),
             },
-            None => request::Outcome::Failure((Status::BadRequest, ApiKeyError::Missing)),
+            None => {
+                let cookies = req.cookies();
+                match cookies.get("token") {
+                    Some(s) => if validate_token(s.to_string()).await {
+                        request::Outcome::Success(api_key(s.to_string()))
+                    } else {
+                        request::Outcome::Failure((Status::Unauthorized, ApiKeyError::Invalid))
+                    },
+                    _ => {
+                        request::Outcome::Failure((Status::Unauthorized, ApiKeyError::Missing))
+                    }
+                }
+            },
         }
     }
-}
-
-// http://0.0.0.0/login?token=someSecretKeyHere
-
-#[get("/login")]
-pub async fn login(_key : api_key) -> Status {
-    Status::Ok
 }
 
 pub async fn validate_token(token: String) -> bool {
@@ -68,17 +73,27 @@ pub async fn get_user(token: String) -> Option<users_with_id> {
     }
 }
 
+// http://0.0.0.0/login?token=someSecretKeyHere
+#[get("/login")]
+pub async fn login(_key : api_key) -> Status {
+    Status::Ok
+}
+
 #[get("/me")]
 pub async fn me(key: api_key) -> rocket::response::content::Json<String> {
     match get_user(key.0).await {
-        Some(u) => Json(json!({
-            "status": 200,
-            "message": "Found",
-            "data": u
-        }).to_string()),
-        None => Json(json!({
-            "status": 400,
-            "message": "Bad Request",
-        }).to_string()),
-    }
+        Some(u) => Json(
+                json!({
+                    "status": 200,
+                    "message": "Found",
+                    "data": u
+                }).to_string()
+            ),
+        None => Json(
+                json!({
+                    "status": 500,
+                    "message": "Internal Server Error",
+                }).to_string()
+            ),
+    }   
 }

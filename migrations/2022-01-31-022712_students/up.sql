@@ -1,6 +1,6 @@
 CREATE TABLE students(
     id SERIAL PRIMARY KEY,
-    student_id VARCHAR(255) NOT NULL,
+    seven_id VARCHAR(255) NOT NULL,
     student_name VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
@@ -38,5 +38,5 @@ CREATE TABLE visits(
 --  Default Stuff
 INSERT INTO users(username, token) VALUES ('admin', 'password');
 INSERT INTO users(username, token) VALUES ('library', 'gobears');
-INSERT INTO students(student_id, student_name, email, is_aide) VALUES ('0000001', 'Testing Student', 'tstudent1-00@spotsylvania.k12.va.us', false);
-INSERT INTO students(student_id, student_name, email, is_aide) VALUES ('0000002', 'Testing Aide', 'tstudent2-00@spotsylvania.k12.va.us', true);
+INSERT INTO students(seven_id, student_name, email, is_aide) VALUES ('0000001', 'Testing Student', 'tstudent1-00@spotsylvania.k12.va.us', false);
+INSERT INTO students(seven_id, student_name, email, is_aide) VALUES ('0000002', 'Testing Aide', 'tstudent2-00@spotsylvania.k12.va.us', true);\

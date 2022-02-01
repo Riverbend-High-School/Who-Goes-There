@@ -1,7 +1,7 @@
 table! {
     students (id) {
         id -> Int4,
-        student_id -> Varchar,
+        seven_id -> Varchar,
         student_name -> Varchar,
         email -> Varchar,
         created_at -> Timestamp,
