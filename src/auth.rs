@@ -1,6 +1,7 @@
 extern crate diesel;
 
 use crate::model::*;
+use crate::util::*;
 use rocket::http::Status;
 use rocket::request::{self, FromRequest, Request};
 use rocket::response::content::Json;
@@ -64,10 +65,10 @@ pub async fn get_user(token: String) -> Option<users_with_id> {
     {
         Ok(u) => Some(u),
         Err(e) => {
-            warn!(
+            log_warn(format!(
                 "User with token {} failed to validate! (error {})",
                 token, e
-            );
+            ));
             None
         }
     }

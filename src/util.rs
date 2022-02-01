@@ -5,7 +5,7 @@ macro_rules! unwrap_or_return {
         match $r {
             Ok(r) => r,
             Err(e) => {
-                warn!("Unwrapped on error {} (error {})", e, $s);
+                crate::util::log_warn(format!("Unwrapped on error {} (error {})", e, $s));
                 return None;
             }
         }
@@ -14,9 +14,19 @@ macro_rules! unwrap_or_return {
         match $o {
             Some(r) => r,
             None => {
-                warn!("Unwrapped on None (error {})", $s);
+                crate::util::log_warn(format!("Unwrapped on None (error {})", $s));
                 return None;
             }
         }
     };
+}
+
+pub fn log_info<T: std::fmt::Display>(m : T) {
+    info!("{}", m);
+    sentry::capture_message(m.to_string().as_str(), sentry::Level::Debug);
+}
+
+pub fn log_warn<T: std::fmt::Display>(m : T) {
+    warn!("{}", m);
+    sentry::capture_message(m.to_string().as_str(), sentry::Level::Warning);
 }
