@@ -68,7 +68,7 @@ pub async fn check_in(token: api_key, student: serde::json::Json<student_post>) 
                 return Json(
                     json!({
                         "status": 404,
-                        "message": "Not Found"
+                        "message": "Email not found in database!"
                     })
                     .to_string(),
                 );
@@ -90,7 +90,7 @@ pub async fn check_in(token: api_key, student: serde::json::Json<student_post>) 
                 return Json(
                     json!({
                         "status": 404,
-                        "message": "Not Found"
+                        "message": "7 digit ID not found in database!"
                     })
                     .to_string(),
                 );
@@ -100,7 +100,7 @@ pub async fn check_in(token: api_key, student: serde::json::Json<student_post>) 
         return Json(
             json!({
                 "status": 400,
-                "message": "Bad Request"
+                "message": "Invalid input. Please input your seven digit pin or your email!"
             })
             .to_string(),
         );
@@ -156,7 +156,7 @@ pub async fn check_in(token: api_key, student: serde::json::Json<student_post>) 
     Json(
         json!({
             "status": 204,
-            "message": "Visit Checked In"
+            "message": "Successfully checked in!"
         })
         .to_string(),
     )
@@ -209,7 +209,7 @@ pub async fn check_out(token: api_key, student: serde::json::Json<student_post>)
                 return Json(
                     json!({
                         "status": 404,
-                        "message": "Not Found"
+                        "message": "Email not found in database!"
                     })
                     .to_string(),
                 );
@@ -231,7 +231,7 @@ pub async fn check_out(token: api_key, student: serde::json::Json<student_post>)
                 return Json(
                     json!({
                         "status": 404,
-                        "message": "Not Found"
+                        "message": "7 digit ID not found in database!"
                     })
                     .to_string(),
                 );
@@ -241,7 +241,7 @@ pub async fn check_out(token: api_key, student: serde::json::Json<student_post>)
         return Json(
             json!({
                 "status": 400,
-                "message": "Bad Request"
+                "message": "Invalid input"
             })
             .to_string(),
         );
@@ -275,7 +275,7 @@ pub async fn check_out(token: api_key, student: serde::json::Json<student_post>)
             return Json(
                 json!({
                     "status": 404,
-                    "message": "Not Found"
+                    "message": "Student has not checked in previously. Please remember to check in when coming into the library!"
                 })
                 .to_string(),
             )

@@ -38,6 +38,18 @@ async fn files(file: PathBuf) -> Option<NamedFile> {
 async fn main() {
     dotenv().ok();
 
+    let _guard = match env::var("SENRTY_DSN") {
+        Ok(s) => 
+         Some(sentry::init((s, sentry::ClientOptions {
+            release: sentry::release_name!(),
+            ..Default::default()
+        }))),
+        Err(e) => {
+            println!("Failed to get SENTRY_DSN with error {}. Continuing without Sentry logging.", e);
+            None
+        },
+    };
+
     // Starting rocket
     match rocket::build()
         .mount("/", routes![
