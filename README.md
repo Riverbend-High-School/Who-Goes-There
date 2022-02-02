@@ -50,4 +50,4 @@ Authentication with the API is currently done through **API Tokens** supplied vi
 Distributed under the GPLv3 License. See [LICENSE](LICENSE) for more information.
 
 ## Contact
-RHS Library - rhs@spotylvania@k12.va.us
+RHS Library - rhs@spotsylvania@k12.va.us
