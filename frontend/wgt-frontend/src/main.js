@@ -29,6 +29,17 @@ const router = VueRouter.createRouter({
             component: checkTemplate,
             props: {title : 'Library Sign Out', endpoint : 'checkout'}
         },
+        {
+            path: '/visits',
+            name: 'visits',
+            component: () => import('./pages/ActiveVisits.vue'),
+            props: {endpoint: 'visits'}
+        },
+        {
+            path: '/test',
+            name: 'test',
+            component: () => import('./pages/AccessDenied.vue'),
+        }
     ]
 })
 

@@ -65,6 +65,7 @@ async fn main() {
             student::all_visits,
             student::get_student,
         ])
+        .attach(crate::util::CORS)
         .launch()
         .await
     {

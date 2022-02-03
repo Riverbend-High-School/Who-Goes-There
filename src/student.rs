@@ -1,7 +1,7 @@
 extern crate diesel;
 
 use crate::auth::api_key;
-use crate::model::*;
+use crate::{model::*, make_json_response};
 use regex::Regex;
 use rocket::response::content::Json;
 use rocket::serde::{self, Deserialize};
@@ -269,10 +269,11 @@ pub async fn check_out(token: api_key, student: serde::json::Json<student_post>)
                     ));
                 }
             }
-        },
+        }
         Err(e) if e == diesel::NotFound => {
             log_info(format!(
-                "No active visit for student '{}' ({})", student.seven_id, student.email, 
+                "No active visit for student '{}' ({})",
+                student.seven_id, student.email,
             ));
             return Json(
                 json!({
@@ -280,11 +281,12 @@ pub async fn check_out(token: api_key, student: serde::json::Json<student_post>)
                     "message": "Student has not checked in previously. Please remember to check in when coming into the library!"
                 })
                 .to_string(),
-            )
+            );
         }
         Err(e) => {
             log_warn(format!(
-                "Error occured while finding active visit for student with id '{}' (error {})", student.id, e, 
+                "Error occured while finding active visit for student with id '{}' (error {})",
+                student.id, e,
             ));
             return Json(
                 json!({
@@ -292,10 +294,10 @@ pub async fn check_out(token: api_key, student: serde::json::Json<student_post>)
                     "message": "Internal Server Error"
                 })
                 .to_string(),
-            )
-        },
+            );
+        }
     }
-    
+
     Json(
         json!({
             "status": 204,
@@ -307,7 +309,6 @@ pub async fn check_out(token: api_key, student: serde::json::Json<student_post>)
 
 #[get("/visits/all")]
 pub async fn all_visits(_token: api_key) -> Json<String> {
-   
     let connection = match crate::create_connection() {
         Some(c) => c,
         None => {
@@ -321,25 +322,21 @@ pub async fn all_visits(_token: api_key) -> Json<String> {
         }
     };
 
-    let visits : Vec<visits_with_id> = match super::schema::visits::dsl::visits
-        .get_results::<visits_with_id>(&connection) {
-            Ok(v) => {
-                v
-            },
+    let visits: Vec<visits_with_id> =
+        match super::schema::visits::dsl::visits.get_results::<visits_with_id>(&connection) {
+            Ok(v) => v,
             Err(e) => {
-                log_warn(format!(
-                    "Could not get active visits with error {}", e
-                ));
+                log_warn(format!("Could not get active visits with error {}", e));
                 return Json(
                     json!({
                         "status": 500,
                         "message": "Internal Server Error"
                     })
                     .to_string(),
-                )
+                );
             }
         };
-   
+
     Json(
         json!({
             "status": 200,
@@ -352,7 +349,27 @@ pub async fn all_visits(_token: api_key) -> Json<String> {
 
 #[get("/visits")]
 pub async fn visits(_token: api_key) -> Json<String> {
-   
+    let connection = match crate::create_connection() {
+        Some(c) => c,
+        None => return make_json_response!(500, "Internal Server Error")
+    };
+
+    let visits: Vec<visits_with_student> = match super::schema::visits::dsl::visits
+        .filter(super::schema::visits::dsl::left_at.is_null())
+        .get_results::<visits_with_id>(&connection)
+    {
+        Ok(v) => v,
+        Err(e) => {
+            log_warn(format!("Could not get active visits with error {}", e));
+            return make_json_response!(500, "Internal Server Error");
+        }
+    }.iter().map(|v| visits_with_student::from(v)).collect();
+
+    return make_json_response!(200, "Found", visits);
+}
+
+#[get("/student/<id>")]
+pub async fn get_student(id: i32, _token: api_key) -> Json<String> {
     let connection = match crate::create_connection() {
         Some(c) => c,
         None => {
@@ -366,45 +383,45 @@ pub async fn visits(_token: api_key) -> Json<String> {
         }
     };
 
-    let visits : Vec<visits_with_id> = match super::schema::visits::dsl::visits
-        .filter(super::schema::visits::dsl::left_at.is_null())
-        .get_results::<visits_with_id>(&connection) {
-            Ok(v) => {
-                v
-            },
-            Err(e) => {
-                log_warn(format!(
-                    "Could not get active visits with error {}", e
-                ));
-                return Json(
-                    json!({
-                        "status": 500,
-                        "message": "Internal Server Error"
-                    })
-                    .to_string(),
-                )
-            }
-        };
-   
+    let student: students_with_id = match super::schema::students::dsl::students
+        .filter(super::schema::students::dsl::id.eq(id))
+        .get_result::<students_with_id>(&connection)
+    {
+        Ok(s) => s,
+        Err(e) if e == diesel::NotFound => {
+            log_warn(format!(
+                "Could not find student with id {} (error {})",
+                id, e
+            ));
+            return Json(
+                json!({
+                    "status": 400,
+                    "message": "Student not found!"
+                })
+                .to_string(),
+            );
+        }
+        Err(e) => {
+            log_warn(format!(
+                "Unknown error '{}' while selecting student with id {}",
+                e, id
+            ));
+            return Json(
+                json!({
+                    "status": 500,
+                    "message": "Internal Server Error"
+                })
+                .to_string(),
+            );
+        }
+    };
+
     Json(
         json!({
             "status": 200,
             "message": "Found",
-            "data": visits
+            "data": student
         })
         .to_string(),
-    )
-}
-
-#[get("/student/<id>")]
-pub async fn get_student(id : i32, _token : api_key) -> Json<String> {
-
-
-    Json(
-        json!({
-            "status": 200,
-            "message": "Found",
-            "data": students_with_id::default()
-        }).to_string()
     )
 }

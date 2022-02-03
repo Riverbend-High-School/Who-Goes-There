@@ -1,5 +1,6 @@
 extern crate diesel;
 
+use crate::make_json_response;
 use crate::model::*;
 use crate::util::*;
 use rocket::http::Status;
@@ -83,18 +84,7 @@ pub async fn login(_key : api_key) -> Status {
 #[get("/me")]
 pub async fn me(key: api_key) -> rocket::response::content::Json<String> {
     match get_user(key.0).await {
-        Some(u) => Json(
-                json!({
-                    "status": 200,
-                    "message": "Found",
-                    "data": u
-                }).to_string()
-            ),
-        None => Json(
-                json!({
-                    "status": 500,
-                    "message": "Internal Server Error",
-                }).to_string()
-            ),
+        Some(u) => make_json_response!(200, "Found", u),
+        None => make_json_response!(500, "Internal Server Error"),
     }   
 }

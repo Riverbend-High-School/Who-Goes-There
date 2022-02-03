@@ -1,6 +1,9 @@
+use crate::util::log_warn;
+
 use super::schema::*;
 use chrono::NaiveDateTime;
 use rocket::serde::{Deserialize, Serialize};
+use diesel::prelude::*;
 
 #[derive(Queryable, Clone, PartialEq, PartialOrd, Serialize, Deserialize)]
 pub struct students_with_id {
@@ -83,8 +86,49 @@ pub struct visits_with_id {
 
 #[derive(Insertable, Clone, PartialEq, PartialOrd, Serialize, Deserialize)]
 #[table_name = "visits"]
-pub struct vists_without_id {
+pub struct visits_without_id {
     pub student_id: i32,
     pub checked_in: NaiveDateTime,
     pub left_at: Option<NaiveDateTime>,
+}
+
+#[derive(Clone, PartialEq, PartialOrd, Serialize, Deserialize)]
+pub struct visits_with_student {
+    pub id : i32,
+    pub student : Option<students_with_id>,
+    pub student_id : i32,
+    pub checked_in: NaiveDateTime,
+    pub left_at : Option<NaiveDateTime>,
+} impl From<&visits_with_id> for visits_with_student {
+    fn from(v: &visits_with_id) -> Self {
+        let mut default = visits_with_student {
+            id: v.id,
+            student: None,
+            student_id : v.student_id,
+            checked_in: v.checked_in,
+            left_at: v.left_at,
+        };
+
+        let connection = match crate::create_connection() {
+            Some(c) => c,
+            None => return default,
+        };
+
+        let student : students_with_id = match super::schema::students::dsl::students
+            .filter(super::schema::students::dsl::id.eq(v.student_id))
+            .first::<students_with_id>(&connection) {
+                Ok(s) => s,
+                Err(e) if e == diesel::NotFound => {
+                    log_warn(format!("Failed to find student with id {} while adding student to visit struct!", v.student_id));
+                    return default;
+                },
+                Err(e) => {
+                    log_warn(format!("Unknown error occurred while adding student with id {} to a visit struct (error {})", v.student_id, e));
+                    return default;
+                }
+            };
+
+        default.student = Some(student);
+        default
+    }
 }
