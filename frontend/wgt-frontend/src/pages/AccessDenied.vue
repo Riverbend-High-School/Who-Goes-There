@@ -23,7 +23,7 @@
 export default {};
 </script>
 
-<style>
+<style scoped>
 span {
     text-decoration-color: #da0000 !important;
     text-decoration: underline;

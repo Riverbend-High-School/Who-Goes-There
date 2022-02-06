@@ -1,5 +1,5 @@
 <template>
-    <div class="fullscreen">
+    <div class="fullscreen" v-if="authenticated">
         <div class="forgot-one">
             <div class="color-box left-rotate"></div>
             <div class="color-box right-rotate"></div>
@@ -34,10 +34,17 @@
             </div>
         </div>
     </div>
+    <error-template
+        v-else-if="authenticated != null"
+        title="Access Denied!"
+        message="It appears you have reached an endpoint you don't have access to. If you believe this to be an error please check to make sure you have included your access token in the url with the following format: <span>URL FORMAT</span>. If you would like to request access please click the button below."
+    ></error-template>
 </template>
 
 <script>
 import BeatLoader from "vue-spinner/src/BeatLoader.vue";
+
+import errorTemplate from "../components/errorTemplate.vue";
 
 const BASE_URL = process.env.VUE_APP_ROOT_API;
 
@@ -46,6 +53,7 @@ export default {
     props: ["title", "endpoint"],
     components: {
         BeatLoader,
+        "error-template": errorTemplate,
     },
     data() {
         return {
@@ -54,6 +62,7 @@ export default {
             success: "",
             loading: false,
             endpoint_path: this.endpoint,
+            authenticated: null,
         };
     },
     methods: {
@@ -121,13 +130,50 @@ export default {
             }, 5000);
             e.preventDefault();
         },
+        checkMe(e) {
+            if (this.$route.query.token) {
+                this.axios
+                    .get(`${BASE_URL}me?token=${this.$route.query.token}`)
+                    .then(
+                        (response) => {
+                            if (response.status == 200) {
+                                console.log("Successfully authenticated token");
+                                this.authenticated = true;
+                            } else {
+                                clearInterval(this.get_interval);
+                                console.error(
+                                    `Failed to authorize current token ${this.$route.query.token} with error ${response}`
+                                );
+                                this.authenticated = false;
+                            }
+                        },
+                        (response) => {
+                            clearInterval(this.get_interval);
+                            console.error(
+                                `Failed to authorize current token ${this.$route.query.token} with error ${response}`
+                            );
+                            this.authenticated = false;
+                        }
+                    );
+            } else {
+                console.error("No token provided");
+                clearInterval(this.get_interval);
+                this.authenticated = false;
+            }
+            if (e) {
+                e.preventDefault();
+            }
+            return this.authenticated;
+        },
     },
-    mounted() {},
+    mounted() {
+        this.checkMe();
+    },
     unmount() {},
 };
 </script>
 
-<style>
+<style scoped>
 .fullscreen {
     display: flex;
     position: relative;

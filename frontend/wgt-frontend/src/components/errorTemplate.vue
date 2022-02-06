@@ -1,21 +1,16 @@
 <template>
     <div class="fullscreen">
-        <div class="forgot-one">
+        <div class="center-items">
             <div class="color-box left-rotate"></div>
             <div class="color-box right-rotate"></div>
             <div class="input-box">
-                <h1 class="title">Dashboard</h1>
-                <div class="links">
-                    <router-link class="link" :to="'/visits?token=' + token"
-                        >Active Visits</router-link
-                    >
-                    <router-link class="link" :to="'/checkin?token=' + token"
-                        >Checkin</router-link
-                    >
-                    <router-link class="link" :to="'/checkout?token=' + token"
-                        >Checkout</router-link
-                    >
-                </div>
+                <h1 v-html="title"></h1>
+                <p v-html="message"></p>
+                <input
+                    @click="returnDashboard"
+                    type="button"
+                    value="Return to Dashboard"
+                />
             </div>
         </div>
     </div>
@@ -23,39 +18,43 @@
 
 <script>
 export default {
-    name: "Home",
-    data() {
-        return {
-            token: null,
-        };
-    },
-    components: {},
-    mounted() {
-        this.token = this.$route.query.token;
+    name: "errorTemplate",
+    props: ["title", "message"],
+    methods: {
+        returnDashboard() {
+            this.$router.push("/");
+        },
     },
 };
 </script>
 
-<style scope>
+<style scoped>
+span {
+    text-decoration-color: #da0000 !important;
+    text-decoration: underline;
+    text-decoration-thickness: auto;
+}
+
 .fullscreen {
     display: flex;
     position: relative;
-    background-color: #111827;
+    background-color: rgb(24 24 27);
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    font-family: sans;
+    font-family: "Ubuntu", sans-serif;
 }
 
-.forgot-one {
+.center-items {
     position: relative;
     width: 100%;
     max-width: 24rem;
 }
 
 .color-box {
+    background-color: rgb(153 27 27);
     position: absolute;
     width: 100%;
     height: 100%;
@@ -65,19 +64,15 @@ export default {
 }
 
 .left-rotate {
-    background-color: #1d4ed8;
     transform: rotate(-6deg);
 }
 
 .right-rotate {
-    background-color: #047857;
     transform: rotate(6deg);
 }
 
 .input-box {
     position: relative;
-    padding-top: 1rem;
-    padding-bottom: 1rem;
     padding-left: 1.5rem;
     padding-right: 1.5rem;
     background-color: #e5e7eb;
@@ -86,21 +81,25 @@ export default {
         0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
-.title {
-    display: block;
-    margin-top: 0.75rem;
+h1 {
+    margin: 0px 0px 10px 0px;
     color: #374151;
-    font-size: 2.25rem;
+    font-size: 2.75rem;
     line-height: 2.5rem;
     font-weight: 700;
     text-align: center;
 }
 
-.link {
-    margin-top: 0.75rem;
-    padding-top: 0.75rem;
-    padding-bottom: 0.75rem;
-    background-color: #3b82f6;
+p {
+    color: #374151;
+    font-size: 1.25rem;
+    line-height: 1.5rem;
+    text-align: center;
+    margin: 0px 0px 20px 0px;
+}
+
+input {
+    background-color: rgb(71 85 105);
     transition-property: background-color, border-color, color, fill, stroke,
         opacity, box-shadow, transform;
     transition-duration: 500ms;
@@ -110,30 +109,11 @@ export default {
     border-radius: 0.75rem;
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
         0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    font-size: 1.25rem;
 }
-.link:hover {
+
+input:hover {
     cursor: pointer;
-    background-color: #1a6ef5;
-}
-
-.links {
-    display: flex;
-    justify-content: space-between;
-    flex-direction: column;
-    text-align: center;
-}
-
-.loading {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 20px;
-    margin-top: 0.75rem;
-    height: 1rem;
-}
-
-.status_text {
-    font-weight: 700;
-    text-align: center;
+    background-color: rgb(100 116 139);
 }
 </style>

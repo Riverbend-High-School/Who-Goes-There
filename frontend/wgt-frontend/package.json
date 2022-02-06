@@ -10,10 +10,13 @@
     "dependencies": {
         "@sentry/tracing": "^6.17.3",
         "@sentry/vue": "^6.17.3",
+        "ag-grid-community": "^26.2.1",
+        "ag-grid-vue3": "^26.2.0",
         "axios": "^0.25.0",
         "core-js": "^3.6.5",
         "vue": "^3.0.0",
         "vue-axios": "^3.4.0",
+        "vue-class-component": "^8.0.0-rc.1",
         "vue-router": "^4.0.12",
         "vue-spinner": "^1.0.4"
     },
@@ -24,7 +27,9 @@
         "@vue/compiler-sfc": "^3.0.0",
         "babel-eslint": "^10.1.0",
         "eslint": "^6.7.2",
-        "eslint-plugin-vue": "^7.0.0"
+        "eslint-plugin-vue": "^7.0.0",
+        "sass": "^1.49.7",
+        "sass-loader": "^10.0.5"
     },
     "eslintConfig": {
         "root": true,

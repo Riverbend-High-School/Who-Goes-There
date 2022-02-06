@@ -428,8 +428,3 @@ pub async fn get_student(id: i32, _token: api_key) -> Json<String> {
         .to_string(),
     )
 }
-
-#[post("/checkout/all")]
-pub async fn checkout_all_students(token: api_key) -> Json<String> {
-    make_json_response!(200, "OK")
-}

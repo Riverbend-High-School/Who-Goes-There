@@ -38,10 +38,25 @@ const router = VueRouter.createRouter({
         {
             path: "/test",
             name: "test",
-            component: () => import("./pages/AccessDenied.vue"),
+            component: () => import("./components/errorTemplate.vue"),
+            props: (route) => ({
+                title: "Not Found",
+                message: `The requested URL <span>${route.path}</span> was not found on this server. `,
+            }),
+        },
+        {
+            path: "/:pathMatch(.*)*",
+            name: "not-found",
+            component: () => import("./components/errorTemplate.vue"),
+            props: (route) => ({
+                title: "Not Found",
+                message: `The requested URL <span>${route.path}</span> was not found on this server. `,
+            }),
         },
     ],
 });
+
+export default router;
 
 Sentry.init({
     app,
