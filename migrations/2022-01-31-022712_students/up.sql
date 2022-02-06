@@ -39,4 +39,4 @@ CREATE TABLE visits(
 INSERT INTO users(username, token) VALUES ('admin', 'password');
 INSERT INTO users(username, token) VALUES ('library', 'gobears');
 INSERT INTO students(seven_id, student_name, email, is_aide) VALUES ('0000001', 'Testing Student', 'tstudent1-00@spotsylvania.k12.va.us', false);
-INSERT INTO students(seven_id, student_name, email, is_aide) VALUES ('0000002', 'Testing Aide', 'tstudent2-00@spotsylvania.k12.va.us', true);\
+INSERT INTO students(seven_id, student_name, email, is_aide) VALUES ('0000002', 'Testing Aide', 'tstudent2-00@spotsylvania.k12.va.us', true);

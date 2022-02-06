@@ -20,9 +20,10 @@ All commands assume that you are at the root of the `wgt-backend` repository tha
     rustup update
     ```
 
-2. Create and populate the `.env` file.
+2. Create and populate the `.env` files.
     ```
     cp .env.example .env
+    cp ./frontend/wgt-frontend/.env.example ./frontend/wgt-frontend/.env
     ```
 
 3. Install the Diesel CLI for the database
