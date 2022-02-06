@@ -41,9 +41,4 @@ table! {
 
 joinable!(visits -> students (student_id));
 
-allow_tables_to_appear_in_same_query!(
-    students,
-    user_login,
-    users,
-    visits,
-);
+allow_tables_to_appear_in_same_query!(students, user_login, users, visits,);

@@ -1,6 +1,5 @@
 #![allow(non_camel_case_types)]
 
-
 #[macro_use]
 extern crate rocket;
 
@@ -39,32 +38,37 @@ async fn main() {
     dotenv().ok();
 
     let _guard = match env::var("SENTRY_DSN") {
-        Ok(s) => 
-         Some(sentry::init((s, sentry::ClientOptions {
-            release: sentry::release_name!(),
-            ..Default::default()
-        }))),
+        Ok(s) => Some(sentry::init((
+            s,
+            sentry::ClientOptions {
+                release: sentry::release_name!(),
+                ..Default::default()
+            },
+        ))),
         Err(e) => {
-            println!("Failed to get SENTRY_DSN with error {}. Continuing without Sentry logging.", e);
+            println!(
+                "Failed to get SENTRY_DSN with error {}. Continuing without Sentry logging.",
+                e
+            );
             None
-        },
+        }
     };
 
     // Starting rocket
     match rocket::build()
-        .mount("/", routes![
-            index, 
-            files, 
-        ])
-        .mount("/api", routes![
-            auth::login,
-            auth::me,
-            student::check_in,
-            student::check_out,
-            student::visits,
-            student::all_visits,
-            student::get_student,
-        ])
+        .mount("/", routes![index, files,])
+        .mount(
+            "/api",
+            routes![
+                auth::login,
+                auth::me,
+                student::check_in,
+                student::check_out,
+                student::visits,
+                student::all_visits,
+                student::get_student,
+            ],
+        )
         .attach(crate::util::CORS)
         .launch()
         .await
@@ -78,10 +82,8 @@ async fn main() {
 
 fn create_connection() -> Option<PgConnection> {
     let database_url = unwrap_or_return!(env::var("DATABASE_URL"), "Database URL not set.");
-    Some(
-        unwrap_or_return!(
-            PgConnection::establish(&database_url),
-            "Error connecting to database!"
-        )
-    )
+    Some(unwrap_or_return!(
+        PgConnection::establish(&database_url),
+        "Error connecting to database!"
+    ))
 }

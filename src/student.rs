@@ -1,7 +1,7 @@
 extern crate diesel;
 
 use crate::auth::api_key;
-use crate::{model::*, make_json_response};
+use crate::{make_json_response, model::*};
 use regex::Regex;
 use rocket::response::content::Json;
 use rocket::serde::{self, Deserialize};
@@ -351,7 +351,7 @@ pub async fn all_visits(_token: api_key) -> Json<String> {
 pub async fn visits(_token: api_key) -> Json<String> {
     let connection = match crate::create_connection() {
         Some(c) => c,
-        None => return make_json_response!(500, "Internal Server Error")
+        None => return make_json_response!(500, "Internal Server Error"),
     };
 
     let visits: Vec<visits_with_student> = match super::schema::visits::dsl::visits
@@ -363,7 +363,10 @@ pub async fn visits(_token: api_key) -> Json<String> {
             log_warn(format!("Could not get active visits with error {}", e));
             return make_json_response!(500, "Internal Server Error");
         }
-    }.iter().map(|v| visits_with_student::from(v)).collect();
+    }
+    .iter()
+    .map(|v| visits_with_student::from(v))
+    .collect();
 
     return make_json_response!(200, "Found", visits);
 }
@@ -424,4 +427,9 @@ pub async fn get_student(id: i32, _token: api_key) -> Json<String> {
         })
         .to_string(),
     )
+}
+
+#[post("/checkout/all")]
+pub async fn checkout_all_students(token: api_key) -> Json<String> {
+    make_json_response!(200, "OK")
 }
