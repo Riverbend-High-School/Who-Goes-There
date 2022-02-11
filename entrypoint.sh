@@ -12,6 +12,20 @@ json = \"1 MiB\"
 msgpack = \"2 MiB\"
 \"file/jpg\" = \"5 MiB\"" > /app/Rocket.toml
 fi
+
+# Replace env vars in JavaScript files
+echo "Replacing env vars in JS"
+for file in /app/static/js/app.*.js;
+do
+  echo "Processing $file ...";
+
+  # Use the existing JS file as template
+  if [ ! -f $file.tmpl.js ]; then
+    cp $file $file.tmpl.js
+  fi
+
+  envsubst '$VUE_APP_ROOT_API,$VUE_APP_SENTRY_DSN' < $file.tmpl.js > $file
+done
  
 
 # Run download service
