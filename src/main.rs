@@ -9,6 +9,11 @@ extern crate diesel;
 #[macro_use]
 extern crate lazy_static;
 
+#[macro_use]
+extern crate diesel_migrations;
+
+embed_migrations!("migrations");
+
 pub mod auth;
 pub mod model;
 pub mod schema;
@@ -36,6 +41,12 @@ async fn files(file: PathBuf) -> Option<NamedFile> {
 #[rocket::main]
 async fn main() {
     dotenv().ok();
+
+    let connection = create_connection().expect("Failed to connect to database");
+
+    embedded_migrations::run(&connection).expect("Failed to run embedded migrations");
+
+    std::mem::drop(connection);
 
     let _guard = match env::var("SENTRY_DSN") {
         Ok(s) => Some(sentry::init((
