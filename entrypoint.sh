@@ -29,4 +29,4 @@ done
  
 
 # Run download service
-sh /app/wgt_backend
+/app/wgt_backend
