@@ -378,7 +378,7 @@ pub async fn public_visits() -> Json<String> {
         None => return make_json_response!(500, "Internal Server Error"),
     };
 
-    let visits = match super::schema::visits::dsl::visits
+    let visits: Vec<serde_json::Value> = match super::schema::visits::dsl::visits
         .filter(super::schema::visits::dsl::left_at.is_null())
         .get_results::<visits_with_id>(&connection)
     {
@@ -399,7 +399,7 @@ pub async fn public_visits() -> Json<String> {
     })
     .collect();
 
-    Json(make_json_response!(200, "Found", visits))
+    make_json_response!(200, "Found", visits)
 }
 
 #[get("/student/<id>")]
