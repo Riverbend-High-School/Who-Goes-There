@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
   db:
-    image: postgres
+    image: postgres:alpine
     environment:
       POSTGRES_USER: wgt
       POSTGRES_PASSWORD: postgres_password

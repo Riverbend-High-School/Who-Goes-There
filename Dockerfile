@@ -6,9 +6,7 @@ RUN update-ca-certificates
 
 # Get Postgres
 RUN apt update
-RUN apt install -y libpq-dev postgresql
-RUN apt install -y npm
-RUN apt install -y git
+RUN apt install -y libpq-dev postgresql npm git
 
 # Create app user
 ARG USER=backend
@@ -45,7 +43,7 @@ RUN npm run build
 ####################################################################################################
 ## Final image
 ####################################################################################################
-FROM debian:buster
+FROM alpine:latest
 
 # Import from builder.
 COPY --from=builder /etc/passwd /etc/passwd
@@ -58,12 +56,17 @@ COPY --from=builder /app/target/release/wgt_backend /app/wgt_backend
 COPY --from=builder /app/frontend/wgt-frontend/dist/ /app/static
 COPY --from=builder /app/entrypoint.sh /app/entrypoint.sh
 
-RUN apt update -y
-RUN apt install -y postgresql-11
+RUN chmod +x /app/entrypoint.sh
+RUN chmod +x /app/wgt_backend
+RUN apk update
+RUN apk add --no-cache postgresql gettext
+RUN apk add --no-cache --upgrade bash
+
+RUN ls -R /app
 
 USER $USER:$USER
 
 # Expose web http port
 EXPOSE 9999
 
-ENTRYPOINT ["/app/entrypoint.sh"]
+CMD ["sh", "/app/entrypoint.sh"]

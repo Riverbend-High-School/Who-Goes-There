@@ -2,7 +2,6 @@ extern crate diesel;
 
 use crate::make_json_response;
 use crate::model::*;
-use crate::util::*;
 use rocket::http::Status;
 use rocket::request::{self, FromRequest, Request};
 use rocket::response::content::Json;
