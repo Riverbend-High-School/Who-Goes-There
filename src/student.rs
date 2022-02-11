@@ -371,6 +371,37 @@ pub async fn visits(_token: api_key) -> Json<String> {
     return make_json_response!(200, "Found", visits);
 }
 
+#[get("/visits/public")]
+pub async fn public_visits() -> Json<String> {
+    let connection = match crate::create_connection() {
+        Some(c) => c,
+        None => return make_json_response!(500, "Internal Server Error"),
+    };
+
+    let visits = match super::schema::visits::dsl::visits
+        .filter(super::schema::visits::dsl::left_at.is_null())
+        .get_results::<visits_with_id>(&connection)
+    {
+        Ok(v) => v,
+        Err(e) => {
+            log_warn(format!("Could not get active visits with error {}", e));
+            return make_json_response!(500, "Internal Server Error");
+        }
+    }
+    .iter()
+    .map(|v| {
+        let visit = visits_with_student::from(v);
+        json!({
+            "id": visit.id,
+            "student_name": visit.student.unwrap_or_default().student_name,
+            "checked_in": visit.checked_in,
+        })
+    })
+    .collect();
+
+    Json(make_json_response!(200, "Found", visits))
+}
+
 #[get("/student/<id>")]
 pub async fn get_student(id: i32, _token: api_key) -> Json<String> {
     let connection = match crate::create_connection() {

@@ -21,11 +21,11 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - '9999:80'
+      - '80:9999'
     restart: unless-stopped
     environment:
       DATABASE_URL: postgres://downloader:postgres_password@db/downloader
-      SENTRY_DSN: Settings > Project > Client Keys (DSN) > Copy URL
+      SENTRY_DSN: https://4bcef5183db840968ab5cd29215c87b2@o1031901.ingest.sentry.io/6177567
     networks:
       - net
     depends_on:

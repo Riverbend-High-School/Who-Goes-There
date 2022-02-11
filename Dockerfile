@@ -55,6 +55,8 @@ WORKDIR /app
 
 # Copy our build
 COPY --from=builder /app/target/release/wgt_backend /app/wgt_backend
+COPY --from=builder /app/frontend/wgt-frontend/dist/ /app/static
+COPY --from=builder /app/entrypoint.sh /app/entrypoint.sh
 
 RUN apt update -y
 RUN apt install -y postgresql-11
