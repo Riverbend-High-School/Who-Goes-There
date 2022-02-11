@@ -25,7 +25,7 @@ services:
     restart: unless-stopped
     environment:
       DATABASE_URL: postgres://downloader:postgres_password@db/downloader
-      SENTRY_DSN: https://305a3fee962f4a5397019e209c924a3b@o1031901.ingest.sentry.io/6177567
+      SENTRY_DSN: Settings > Project > Client Keys (DSN) > Copy URL
     networks:
       - net
     depends_on:
