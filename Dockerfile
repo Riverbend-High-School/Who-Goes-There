@@ -79,10 +79,9 @@ COPY --from=builder /app/entrypoint.sh /app/entrypoint.sh
 RUN chown -R "${USER}":"${USER}" /app
 
 RUN chmod +x /app/entrypoint.sh
-RUN apk add --no-cache postgresql gettext
+RUN apk add --no-cache libpq-dev gettext
 RUN apk add --no-cache --upgrade bash
-
-RUN ls -R /app
+RUN rm -rf /var/cache/apk/*
 
 USER $USER:$USER
 
@@ -90,4 +89,3 @@ USER $USER:$USER
 EXPOSE 9999
 
 ENTRYPOINT ["sh", "/app/entrypoint.sh"]
-CMD [ "/app/wgt_backend" ]
