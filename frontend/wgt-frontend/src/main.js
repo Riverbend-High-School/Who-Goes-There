@@ -4,6 +4,7 @@ import VueAxios from "vue-axios";
 import * as VueRouter from "vue-router";
 import * as Sentry from "@sentry/vue";
 import { BrowserTracing } from "@sentry/tracing";
+import Configuration from '@/assets/configuration'
 
 import App from "./App.vue";
 
@@ -66,7 +67,7 @@ export default router;
 
 Sentry.init({
     app,
-    dsn: process.env.VUE_APP_SENTRY_DSN,
+    dsn: Configuration.value("sentryDSN"),
     integrations: [
         new BrowserTracing({
             routingInstrumentation: Sentry.vueRouterInstrumentation(router),

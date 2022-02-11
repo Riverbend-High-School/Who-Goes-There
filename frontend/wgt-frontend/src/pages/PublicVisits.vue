@@ -133,10 +133,11 @@
 
 <script>
 import { visits } from "../assets/example_visits";
+import Configuration from "@/assets/configuration";
 
 const debugging = false;
 const EXAMPLE_VISITS = visits;
-const BASE_URL = process.env.VUE_APP_ROOT_API;
+const BASE_URL = Configuration.value("rootAPI");
 
 export default {
     name: "ActiveVisits",

@@ -44,10 +44,10 @@
 
 <script>
 import BeatLoader from "vue-spinner/src/BeatLoader.vue";
-
+import Configuration from "@/assets/configuration";
 import errorTemplate from "../components/errorTemplate.vue";
 
-const BASE_URL = process.env.VUE_APP_ROOT_API;
+const BASE_URL = Configuration.value("rootAPI");
 
 export default {
     name: "checkTemplate",
