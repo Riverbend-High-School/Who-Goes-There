@@ -5,7 +5,7 @@ use chrono::NaiveDateTime;
 use diesel::prelude::*;
 use rocket::serde::{Deserialize, Serialize};
 
-#[derive(Queryable, Clone, PartialEq, PartialOrd, Serialize, Deserialize)]
+#[derive(Queryable, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Debug)]
 pub struct students_with_id {
     pub id: i32,
     pub seven_id: String,
@@ -29,7 +29,7 @@ impl Default for students_with_id {
     }
 }
 
-#[derive(Insertable, Clone, PartialEq, PartialOrd, Serialize, Deserialize)]
+#[derive(Insertable, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Debug)]
 #[table_name = "students"]
 pub struct students_without_id {
     pub seven_id: String,
@@ -40,7 +40,7 @@ pub struct students_without_id {
     pub is_aide: bool,
 }
 
-#[derive(Queryable, Clone, PartialEq, PartialOrd, Serialize, Deserialize)]
+#[derive(Queryable, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Debug)]
 pub struct user_login_with_id {
     pub id: i32,
     pub user_id: i32,
@@ -50,7 +50,7 @@ pub struct user_login_with_id {
     pub session_id: String,
 }
 
-#[derive(Insertable, Clone, PartialEq, PartialOrd, Serialize, Deserialize)]
+#[derive(Insertable, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Debug)]
 #[table_name = "user_login"]
 pub struct user_login_without_id {
     pub user_id: i32,
@@ -60,7 +60,7 @@ pub struct user_login_without_id {
     pub session_id: String,
 }
 
-#[derive(Queryable, Clone, PartialEq, PartialOrd, Serialize, Deserialize)]
+#[derive(Queryable, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Debug)]
 pub struct users_with_id {
     pub id: i32,
     pub username: String,
@@ -68,7 +68,7 @@ pub struct users_with_id {
     pub created_at: NaiveDateTime,
 }
 
-#[derive(Insertable, Clone, PartialEq, PartialOrd, Serialize, Deserialize)]
+#[derive(Insertable, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Debug)]
 #[table_name = "users"]
 pub struct users_without_id {
     pub username: String,
@@ -76,7 +76,7 @@ pub struct users_without_id {
     pub created_at: NaiveDateTime,
 }
 
-#[derive(Queryable, Clone, PartialEq, PartialOrd, Serialize, Deserialize)]
+#[derive(Queryable, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Debug)]
 pub struct visits_with_id {
     pub id: i32,
     pub student_id: i32,
@@ -84,7 +84,7 @@ pub struct visits_with_id {
     pub left_at: Option<NaiveDateTime>,
 }
 
-#[derive(Insertable, Clone, PartialEq, PartialOrd, Serialize, Deserialize)]
+#[derive(Insertable, Clone, PartialEq, PartialOrd, Serialize, Deserialize, Debug)]
 #[table_name = "visits"]
 pub struct visits_without_id {
     pub student_id: i32,
@@ -92,7 +92,7 @@ pub struct visits_without_id {
     pub left_at: Option<NaiveDateTime>,
 }
 
-#[derive(Clone, PartialEq, PartialOrd, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, PartialOrd, Serialize, Deserialize, Debug)]
 pub struct visits_with_student {
     pub id: i32,
     pub student: Option<students_with_id>,
@@ -121,10 +121,14 @@ impl From<&visits_with_id> for visits_with_student {
         {
             Ok(s) => s,
             Err(e) if e == diesel::NotFound => {
-                log_warn(format!(
+                // log_warn(format!(
+                //     "Failed to find student with id {} while adding student to visit struct!",
+                //     v.student_id
+                // ));
+                warn!(
                     "Failed to find student with id {} while adding student to visit struct!",
                     v.student_id
-                ));
+                );
                 return default;
             }
             Err(e) => {

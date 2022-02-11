@@ -11,6 +11,7 @@
                         type="text"
                         name="student_id"
                         placeholder="7-Digit Student ID Number"
+                        autocomplete="off"
                     />
                     <button type="submit" class="submit">Submit</button>
                     <div class="loading">
@@ -74,7 +75,7 @@ export default {
             this.success = "";
             this.axios
                 .post(
-                    `${BASE_URL}${this.endpoint_path}?token=${this.$route.query.token}`,
+                    `${BASE_URL}/${this.endpoint_path}?token=${this.$route.query.token}`,
                     {
                         student_response: this.student_id,
                     }
@@ -133,7 +134,7 @@ export default {
         checkMe(e) {
             if (this.$route.query.token) {
                 this.axios
-                    .get(`${BASE_URL}me?token=${this.$route.query.token}`)
+                    .get(`${BASE_URL}/me?token=${this.$route.query.token}`)
                     .then(
                         (response) => {
                             if (response.status == 200) {

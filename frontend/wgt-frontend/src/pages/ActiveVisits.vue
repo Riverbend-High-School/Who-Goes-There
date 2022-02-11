@@ -1,6 +1,6 @@
 // Write a vue page that shows the active visits as a table
 <template>
-    <div class="fullscreen" v-if="authenticated">
+    <div v-if="authenticated">
         <div class="top">
             <div class="header">
                 <h1>Active Students</h1>
@@ -187,7 +187,7 @@ export default {
                 this.success = "";
                 this.axios
                     .get(
-                        `${BASE_URL}${this.endpoint_path}?token=${this.$route.query.token}`
+                        `${BASE_URL}/${this.endpoint_path}?token=${this.$route.query.token}`
                     )
                     .then(
                         (response) => {
@@ -254,7 +254,7 @@ export default {
         checkMe(e) {
             if (this.$route.query.token) {
                 this.axios
-                    .get(`${BASE_URL}me?token=${this.$route.query.token}`)
+                    .get(`${BASE_URL}/me?token=${this.$route.query.token}`)
                     .then(
                         (response) => {
                             if (response.status == 200) {
@@ -288,7 +288,7 @@ export default {
         },
         forceCheckout(id) {
             this.axios.post(
-                `${BASE_URL}checkout?token=${this.$route.query.token}`,
+                `${BASE_URL}/checkout?token=${this.$route.query.token}`,
                 {
                     student_response: id,
                 }
@@ -298,7 +298,7 @@ export default {
             let working = this.visits;
             working.forEach((visit) => {
                 this.axios.post(
-                    `${BASE_URL}checkout?token=${this.$route.query.token}`,
+                    `${BASE_URL}/checkout?token=${this.$route.query.token}`,
                     {
                         student_response: visit.student.seven_id,
                     }

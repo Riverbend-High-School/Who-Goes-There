@@ -36,6 +36,12 @@ const router = VueRouter.createRouter({
             props: { endpoint: "visits" },
         },
         {
+            path: "/public",
+            name: "public",
+            component: () => import("./pages/PublicVisits.vue"),
+            props: { endpoint: "visits/public" },
+        },
+        {
             path: "/test",
             name: "test",
             component: () => import("./components/errorTemplate.vue"),

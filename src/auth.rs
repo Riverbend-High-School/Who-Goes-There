@@ -66,10 +66,14 @@ pub async fn get_user(token: String) -> Option<users_with_id> {
     {
         Ok(u) => Some(u),
         Err(e) => {
-            log_warn(format!(
+            // log_warn(format!(
+            //     "User with token {} failed to validate! (error {})",
+            //     token, e
+            // ));
+            warn!(
                 "User with token {} failed to validate! (error {})",
                 token, e
-            ));
+            );
             None
         }
     }

@@ -63,10 +63,14 @@ pub async fn check_in(token: api_key, student: serde::json::Json<student_post>) 
         {
             Ok(u) => u,
             Err(e) => {
-                log_warn(format!(
+                // log_warn(format!(
+                //     "Student with email '{}' does not exist! (error {})",
+                //     query, e
+                // ));
+                warn!(
                     "Student with email '{}' does not exist! (error {})",
                     query, e
-                ));
+                );
                 return Json(
                     json!({
                         "status": 404,
@@ -85,10 +89,14 @@ pub async fn check_in(token: api_key, student: serde::json::Json<student_post>) 
         {
             Ok(u) => u,
             Err(e) => {
-                log_warn(format!(
+                // log_warn(format!(
+                //     "Student with seven digit id '{}' does not exist! (error {})",
+                //     query, e
+                // ));
+                warn!(
                     "Student with seven digit id '{}' does not exist! (error {})",
                     query, e
-                ));
+                );
                 return Json(
                     json!({
                         "status": 404,
@@ -116,7 +124,7 @@ pub async fn check_in(token: api_key, student: serde::json::Json<student_post>) 
         .first::<visits_with_id>(&connection)
     {
         Ok(v) => {
-            log_info(format!("Student {} had a previous check in! Setting their leave time to 2 hours from when they last checked in.", student.seven_id));
+            info!("Student {} had a previous check in! Setting their leave time to 2 hours from when they last checked in.", student.seven_id);
             match diesel::update(
                 super::schema::visits::dsl::visits.filter(super::schema::visits::id.eq(v.id)),
             )
@@ -125,10 +133,14 @@ pub async fn check_in(token: api_key, student: serde::json::Json<student_post>) 
             {
                 Ok(_) => (),
                 Err(e) => {
-                    log_warn(format!(
+                    // log_warn(format!(
+                    //     "Failed to update visit {} with new left_at with error {}",
+                    //     v.id, e
+                    // ));
+                    warn!(
                         "Failed to update visit {} with new left_at with error {}",
                         v.id, e
-                    ));
+                    );
                 }
             }
         }
@@ -204,10 +216,14 @@ pub async fn check_out(token: api_key, student: serde::json::Json<student_post>)
         {
             Ok(u) => u,
             Err(e) => {
-                log_warn(format!(
+                // log_warn(format!(
+                //     "Student with email '{}' does not exist! (error {})",
+                //     query, e
+                // ));
+                warn!(
                     "Student with email '{}' does not exist! (error {})",
                     query, e
-                ));
+                );
                 return Json(
                     json!({
                         "status": 404,
@@ -226,10 +242,14 @@ pub async fn check_out(token: api_key, student: serde::json::Json<student_post>)
         {
             Ok(u) => u,
             Err(e) => {
-                log_warn(format!(
+                // log_warn(format!(
+                //     "Student with seven digit id '{}' does not exist! (error {})",
+                //     query, e
+                // ));
+                warn!(
                     "Student with seven digit id '{}' does not exist! (error {})",
                     query, e
-                ));
+                );
                 return Json(
                     json!({
                         "status": 404,
@@ -271,10 +291,10 @@ pub async fn check_out(token: api_key, student: serde::json::Json<student_post>)
             }
         }
         Err(e) if e == diesel::NotFound => {
-            log_info(format!(
+            info!(
                 "No active visit for student '{}' ({})",
                 student.seven_id, student.email,
-            ));
+            );
             return Json(
                 json!({
                     "status": 404,
@@ -379,22 +399,27 @@ pub async fn public_visits() -> Json<String> {
     };
 
     let visits: Vec<serde_json::Value> = match super::schema::visits::dsl::visits
-        .filter(super::schema::visits::dsl::left_at.is_null())
+        .order(super::schema::visits::dsl::left_at.desc())
+        .limit(100)
         .get_results::<visits_with_id>(&connection)
     {
         Ok(v) => v,
         Err(e) => {
-            log_warn(format!("Could not get active visits with error {}", e));
+            log_warn(format!("Could not get visits with error {}", e));
             return make_json_response!(500, "Internal Server Error");
         }
     }
     .iter()
     .map(|v| {
         let visit = visits_with_student::from(v);
+        // info!("Converting visit to json: {:?}", visit);
+        let student = visit.student.unwrap_or_default();
         json!({
             "id": visit.id,
-            "student_name": visit.student.unwrap_or_default().student_name,
+            "student_name": student.student_name,
             "checked_in": visit.checked_in,
+            "left_at": visit.left_at,
+            "is_aide": student.is_aide,
         })
     })
     .collect();
@@ -423,10 +448,11 @@ pub async fn get_student(id: i32, _token: api_key) -> Json<String> {
     {
         Ok(s) => s,
         Err(e) if e == diesel::NotFound => {
-            log_warn(format!(
-                "Could not find student with id {} (error {})",
-                id, e
-            ));
+            // log_warn(format!(
+            //     "Could not find student with id {} (error {})",
+            //     id, e
+            // ));
+            warn!("Could not find student with id {} (error {})", id, e);
             return Json(
                 json!({
                     "status": 400,
