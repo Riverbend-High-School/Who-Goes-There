@@ -1,20 +1,36 @@
-# Use postgres/example user/password credentials
-version: '3.1'
+version: '3.7'
 
 services:
-
   db:
     image: postgres
-    restart: always
     environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: 5PKheqd035H8ArcdYD4jheJNsmryRNJwo7chBupW8OcQabOEegi6djTkQjTF5EiTyvVUHUBocfTPMmc4nTnNQ
-      POSTGRES_DB: WGT
-    ports:
-      - 5432:5432
-  
-  adminer:
-    image: adminer
+      POSTGRES_USER: downloader
+      POSTGRES_PASSWORD: postgres_password
+      POSTGRES_DB: downloader
     restart: always
+    networks:
+      - net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  wgt_backend:
+    container_name: wgt_backend
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:
-      - 8000:8080
+      - '9999:80'
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://downloader:postgres_password@db/downloader
+      SENTRY_DSN: https://305a3fee962f4a5397019e209c924a3b@o1031901.ingest.sentry.io/6177567
+    networks:
+      - net
+    depends_on:
+      db:
+        condition: service_healthy
+networks: 
+  net:
+    driver: bridge
