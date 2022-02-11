@@ -1,12 +1,22 @@
 ## Build Stage
 # Pull base image and update
-FROM rust:latest AS builder
+FROM ekidd/rust-musl-builder:stable AS builder
+
+USER root
 
 RUN update-ca-certificates
 
+
+ENV TZ=America/New_York
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
 # Get Postgres
 RUN apt update
-RUN apt install -y libpq-dev postgresql npm git
+RUN apt install -y libpq-dev postgresql nodejs npm git
+RUN apt update
+RUN npm install -g n
+RUN n stable
+RUN npm install -g npm
 
 # Create app user
 ARG USER=backend
@@ -32,7 +42,7 @@ RUN chown -R "${USER}":"${USER}" /app
 WORKDIR /app
 
 # Build app
-RUN cargo build --release
+RUN cargo build --release --target x86_64-unknown-linux-musl
 
 # Build frontend
 WORKDIR /app/frontend/wgt-frontend
@@ -45,6 +55,16 @@ RUN npm run build
 ####################################################################################################
 FROM alpine:latest
 
+ARG USER=backend
+ARG UID=10001
+
+ENV USER=$USER
+ENV UID=$UID
+
+RUN apk update \
+    && apk add --no-cache ca-certificates tzdata \
+    && rm -rf /var/cache/apk/*
+
 # Import from builder.
 COPY --from=builder /etc/passwd /etc/passwd
 COPY --from=builder /etc/group /etc/group
@@ -52,13 +72,13 @@ COPY --from=builder /etc/group /etc/group
 WORKDIR /app
 
 # Copy our build
-COPY --from=builder /app/target/release/wgt_backend /app/wgt_backend
+COPY --from=builder /app/target/x86_64-unknown-linux-musl/release/wgt_backend /app/wgt_backend
 COPY --from=builder /app/frontend/wgt-frontend/dist/ /app/static
 COPY --from=builder /app/entrypoint.sh /app/entrypoint.sh
 
+RUN chown -R "${USER}":"${USER}" /app
+
 RUN chmod +x /app/entrypoint.sh
-RUN chmod +x /app/wgt_backend
-RUN apk update
 RUN apk add --no-cache postgresql gettext
 RUN apk add --no-cache --upgrade bash
 
@@ -69,4 +89,5 @@ USER $USER:$USER
 # Expose web http port
 EXPOSE 9999
 
-CMD ["sh", "/app/entrypoint.sh"]
+ENTRYPOINT ["sh", "/app/entrypoint.sh"]
+CMD [ "/app/wgt_backend" ]

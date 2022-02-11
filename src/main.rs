@@ -3,6 +3,7 @@
 #[macro_use]
 extern crate rocket;
 
+extern crate openssl;
 #[macro_use]
 extern crate diesel;
 
@@ -41,6 +42,7 @@ async fn files(file: PathBuf) -> Option<NamedFile> {
 #[rocket::main]
 async fn main() {
     dotenv().ok();
+    openssl_probe::init_ssl_cert_env_vars();
 
     let connection = create_connection().expect("Failed to connect to database");
 
