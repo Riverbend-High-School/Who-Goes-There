@@ -1,16 +1,21 @@
 <template>
     <div class="fullscreen">
-        <div class="center-items">
+        <div class="forgot-one">
             <div class="color-box left-rotate"></div>
             <div class="color-box right-rotate"></div>
             <div class="input-box">
-                <h1 v-html="title"></h1>
-                <p v-html="message"></p>
-                <input
-                    @click="returnDashboard"
-                    type="button"
-                    value="Return to Dashboard"
-                />
+                <h1 class="title">Dashboard</h1>
+                <div class="links">
+                    <a class="link" :href="'/visits.html?token=' + token"
+                        >Active Visits</a
+                    >
+                    <a class="link" :href="'/checkin.html?token=' + token"
+                        >Checkin</a
+                    >
+                    <a class="link" :href="'/checkout.html?token=' + token"
+                        >Checkout</a
+                    >
+                </div>
             </div>
         </div>
     </div>
@@ -20,43 +25,39 @@
 const urlParams = new URLSearchParams(window.location.search);
 
 export default {
-    name: "errorTemplate",
-    props: ["title", "message"],
-    methods: {
-        returnDashboard() {
-            window.location.href = "/?token=" + urlParams.get("token");
-        },
+    name: "Home",
+    data() {
+        return {
+            token: null,
+        };
+    },
+    components: {},
+    mounted() {
+        this.token = urlParams.get("token");
     },
 };
 </script>
 
-<style scoped>
-span {
-    text-decoration-color: #da0000 !important;
-    text-decoration: underline;
-    text-decoration-thickness: auto;
-}
-
+<style scope>
 .fullscreen {
     display: flex;
     position: relative;
-    background-color: rgb(24 24 27);
+    background-color: #111827;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    font-family: "Ubuntu", sans-serif;
+    font-family: sans;
 }
 
-.center-items {
+.forgot-one {
     position: relative;
     width: 100%;
     max-width: 24rem;
 }
 
 .color-box {
-    background-color: rgb(153 27 27);
     position: absolute;
     width: 100%;
     height: 100%;
@@ -66,15 +67,19 @@ span {
 }
 
 .left-rotate {
+    background-color: #1d4ed8;
     transform: rotate(-6deg);
 }
 
 .right-rotate {
+    background-color: #047857;
     transform: rotate(6deg);
 }
 
 .input-box {
     position: relative;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
     padding-left: 1.5rem;
     padding-right: 1.5rem;
     background-color: #e5e7eb;
@@ -83,25 +88,21 @@ span {
         0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
-h1 {
-    margin: 0px 0px 10px 0px;
+.title {
+    display: block;
+    margin-top: 0.75rem;
     color: #374151;
-    font-size: 2.75rem;
+    font-size: 2.25rem;
     line-height: 2.5rem;
     font-weight: 700;
     text-align: center;
 }
 
-p {
-    color: #374151;
-    font-size: 1.25rem;
-    line-height: 1.5rem;
-    text-align: center;
-    margin: 0px 0px 20px 0px;
-}
-
-input {
-    background-color: rgb(71 85 105);
+.link {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+    background-color: #3b82f6;
     transition-property: background-color, border-color, color, fill, stroke,
         opacity, box-shadow, transform;
     transition-duration: 500ms;
@@ -111,11 +112,30 @@ input {
     border-radius: 0.75rem;
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
         0 10px 10px -5px rgba(0, 0, 0, 0.04);
-    font-size: 1.25rem;
+}
+.link:hover {
+    cursor: pointer;
+    background-color: #1a6ef5;
 }
 
-input:hover {
-    cursor: pointer;
-    background-color: rgb(100 116 139);
+.links {
+    display: flex;
+    justify-content: space-between;
+    flex-direction: column;
+    text-align: center;
+}
+
+.loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    margin-top: 0.75rem;
+    height: 1rem;
+}
+
+.status_text {
+    font-weight: 700;
+    text-align: center;
 }
 </style>

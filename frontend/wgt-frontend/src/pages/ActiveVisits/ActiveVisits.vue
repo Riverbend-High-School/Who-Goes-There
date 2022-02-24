@@ -150,21 +150,21 @@
 </template>
 
 <script>
-import { visits } from "../assets/example_visits";
+import { visits } from "@/assets/example_visits";
 import Configuration from "@/assets/configuration";
 
-import errorTemplate from "../components/errorTemplate.vue";
+import errorTemplate from "@/components/errorTemplate";
 
 const debugging = false;
 const EXAMPLE_VISITS = visits;
 const BASE_URL = Configuration.value("rootAPI");
+const urlParams = new URLSearchParams(location.search);
 
 export default {
     name: "ActiveVisits",
     components: {
         "error-template": errorTemplate,
     },
-    props: ["endpoint"],
     data() {
         return {
             visits: [],
@@ -172,7 +172,7 @@ export default {
             loading: false,
             error: "",
             success: "",
-            endpoint_path: this.endpoint,
+            endpoint_path: "visits",
             get_interval: null,
             authenticated: null,
             BASE_URL: BASE_URL,
@@ -188,7 +188,9 @@ export default {
                 this.success = "";
                 this.axios
                     .get(
-                        `${BASE_URL}/${this.endpoint_path}?token=${this.$route.query.token}`
+                        `${BASE_URL}/${
+                            this.endpoint_path
+                        }?token=${urlParams.get("token")}`
                     )
                     .then(
                         (response) => {
@@ -253,9 +255,9 @@ export default {
             return date.toLocaleString();
         },
         checkMe(e) {
-            if (this.$route.query.token) {
+            if (urlParams.get("token")) {
                 this.axios
-                    .get(`${BASE_URL}/me?token=${this.$route.query.token}`)
+                    .get(`${BASE_URL}/me?token=${urlParams.get("token")}`)
                     .then(
                         (response) => {
                             if (response.status == 200) {
@@ -264,7 +266,9 @@ export default {
                             } else {
                                 clearInterval(this.get_interval);
                                 console.error(
-                                    `Failed to authorize current token ${this.$route.query.token} with error ${response}`
+                                    `Failed to authorize current token ${urlParams.get(
+                                        "token"
+                                    )} with error ${response}`
                                 );
                                 this.authenticated = false;
                             }
@@ -272,7 +276,9 @@ export default {
                         (response) => {
                             clearInterval(this.get_interval);
                             console.error(
-                                `Failed to authorize current token ${this.$route.query.token} with error ${response}`
+                                `Failed to authorize current token ${urlParams.get(
+                                    "token"
+                                )} with error ${response}`
                             );
                             this.authenticated = false;
                         }
@@ -289,7 +295,7 @@ export default {
         },
         forceCheckout(id) {
             this.axios.post(
-                `${BASE_URL}/checkout?token=${this.$route.query.token}`,
+                `${BASE_URL}/checkout?token=${urlParams.get("token")}`,
                 {
                     student_response: id,
                 }
@@ -299,7 +305,7 @@ export default {
             let working = this.visits;
             working.forEach((visit) => {
                 this.axios.post(
-                    `${BASE_URL}/checkout?token=${this.$route.query.token}`,
+                    `${BASE_URL}/checkout?token=${urlParams.get("token")}`,
                     {
                         student_response: visit.student.seven_id,
                     }

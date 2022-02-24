@@ -48,6 +48,7 @@ import Configuration from "@/assets/configuration";
 import errorTemplate from "../components/errorTemplate.vue";
 
 const BASE_URL = Configuration.value("rootAPI");
+const urlParams = new URLSearchParams(location.search);
 
 export default {
     name: "checkTemplate",
@@ -68,14 +69,16 @@ export default {
     },
     methods: {
         submit(e) {
-            //   console.log(`Submitting ${this.student_id} with token "${this.$route.query.token}"`);
-            //   console.log(this.$route.query.token);
+            //   console.log(`Submitting ${this.student_id} with token "${urlParams.get("token")}"`);
+            //   console.log(urlParams.get("token"));
             this.loading = true;
             this.error = "";
             this.success = "";
             this.axios
                 .post(
-                    `${BASE_URL}/${this.endpoint_path}?token=${this.$route.query.token}`,
+                    `${BASE_URL}/${this.endpoint_path}?token=${urlParams.get(
+                        "token"
+                    )}`,
                     {
                         student_response: this.student_id,
                     }
@@ -132,9 +135,9 @@ export default {
             e.preventDefault();
         },
         checkMe(e) {
-            if (this.$route.query.token) {
+            if (urlParams.get("token")) {
                 this.axios
-                    .get(`${BASE_URL}/me?token=${this.$route.query.token}`)
+                    .get(`${BASE_URL}/me?token=${urlParams.get("token")}`)
                     .then(
                         (response) => {
                             if (response.status == 200) {
@@ -143,7 +146,9 @@ export default {
                             } else {
                                 clearInterval(this.get_interval);
                                 console.error(
-                                    `Failed to authorize current token ${this.$route.query.token} with error ${response}`
+                                    `Failed to authorize current token ${urlParams.get(
+                                        "token"
+                                    )} with error ${response}`
                                 );
                                 this.authenticated = false;
                             }
@@ -151,7 +156,9 @@ export default {
                         (response) => {
                             clearInterval(this.get_interval);
                             console.error(
-                                `Failed to authorize current token ${this.$route.query.token} with error ${response}`
+                                `Failed to authorize current token ${urlParams.get(
+                                    "token"
+                                )} with error ${response}`
                             );
                             this.authenticated = false;
                         }
@@ -168,6 +175,7 @@ export default {
         },
     },
     mounted() {
+        console.log("Mounted");
         this.checkMe();
     },
     unmount() {},

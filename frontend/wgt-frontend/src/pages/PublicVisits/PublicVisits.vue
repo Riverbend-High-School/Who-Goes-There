@@ -132,7 +132,7 @@
 </template>
 
 <script>
-import { visits } from "../assets/example_visits";
+import { visits } from "../../assets/example_visits";
 import Configuration from "@/assets/configuration";
 
 const debugging = false;
