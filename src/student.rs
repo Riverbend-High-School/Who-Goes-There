@@ -12,6 +12,8 @@ use crate::util::*;
 use self::diesel::prelude::*;
 use diesel::dsl;
 
+use rocket::data::{Data, ToByteUnit};
+
 lazy_static! {
     static ref EMAIL_PREFIX_REGEX: Regex =
         Regex::new(r"^(?P<username>[\w]+[-]{1}\d{2})(?P<email>@spotsylvania.k12.va.us)?$").unwrap();
@@ -432,13 +434,7 @@ pub async fn get_student(id: i32, _token: api_key) -> Json<String> {
     let connection = match crate::create_connection() {
         Some(c) => c,
         None => {
-            return Json(
-                json!({
-                    "status": 500,
-                    "message": "Internal Server Error"
-                })
-                .to_string(),
-            )
+            return make_json_response!(500, "Internal Server Error");
         }
     };
 
@@ -453,35 +449,202 @@ pub async fn get_student(id: i32, _token: api_key) -> Json<String> {
             //     id, e
             // ));
             warn!("Could not find student with id {} (error {})", id, e);
-            return Json(
-                json!({
-                    "status": 400,
-                    "message": "Student not found!"
-                })
-                .to_string(),
-            );
+            return make_json_response!(400, "Student not found!");
         }
         Err(e) => {
             log_warn(format!(
                 "Unknown error '{}' while selecting student with id {}",
                 e, id
             ));
+            return make_json_response!(500, "Internal Server Error");
+        }
+    };
+
+    make_json_response!(200, "Found", student)
+}
+
+#[get("/student/all")]
+pub async fn get_all_student(_token: api_key) -> Json<String> {
+    let connection = match crate::create_connection() {
+        Some(c) => c,
+        None => {
             return Json(
                 json!({
                     "status": 500,
                     "message": "Internal Server Error"
                 })
                 .to_string(),
-            );
+            )
         }
     };
 
-    Json(
-        json!({
-            "status": 200,
-            "message": "Found",
-            "data": student
+    let students: Vec<students_with_id> =
+        match super::schema::students::dsl::students.get_results::<students_with_id>(&connection) {
+            Ok(v) => v,
+            Err(e) if e == diesel::NotFound => {
+                // log_warn(format!(
+                //     "Could not find student with id {} (error {})",
+                //     id, e
+                // ));
+                warn!("Failed to get any student from the database! (error {})", e);
+                return make_json_response!(400, "Students not found!");
+            }
+            Err(e) => {
+                log_warn(format!(
+                    "Unknown error '{}' while selecting all students",
+                    e
+                ));
+                return make_json_response!(500, "Internal Server Error");
+            }
+        };
+
+    make_json_response!(200, "Found", students)
+}
+
+#[post("/student/integrate", data = "<file>")]
+pub async fn integrate_student_csv(_token: api_key, file: Data<'_>) -> Json<String> {
+    let connection = match crate::create_connection() {
+        Some(c) => c,
+        None => {
+            return make_json_response!(500, "Internal Server Error");
+        }
+    };
+
+    let filename = chrono::offset::Local::now().to_rfc3339();
+    let raw_filepath = format!("./csv/{}.csv", filename.replace(':', "").replace('+', ""));
+    let filepath = std::path::Path::new(&raw_filepath);
+
+    let folder = std::path::Path::new("./csv");
+    if !folder.exists() {
+        std::fs::create_dir(folder);
+    }
+
+    match file.open(32u32.megabytes()).into_file(filepath).await {
+        Ok(_) => (),
+        Err(e) => {
+            warn!(
+                "Failed to write a csv file ({}) for integration with error {}",
+                filepath.to_string_lossy(),
+                e
+            );
+            return make_json_response!(500, "Internal Server Error");
+        }
+    }
+
+    let mut rdr = csv::Reader::from_reader(match std::fs::File::open(filepath) {
+        Ok(f) => f,
+        Err(e) => {
+            warn!(
+                "Failed to open file {} after creating it when integrating student csvs. (error {})",
+                filepath.to_string_lossy(),
+                e
+            );
+            return make_json_response!(500, "Internal Server Error");
+        }
+    });
+
+    let mut errors: Vec<(usize, String)> = vec![]; // Line number, seven digit ID
+
+    let insertable_students: Vec<students_without_id> = rdr
+        .records()
+        .enumerate()
+        .filter_map(|(i, result)| match result {
+            Ok(result) => {
+                let name = match result.get(0) {
+                    Some(e) => e,
+                    None => {
+                        warn!("CSV is missing the name field for line {}.", i);
+                        errors.push((i, String::from("Unknown")));
+                        return None;
+                    }
+                };
+                let seven_id = match result.get(1) {
+                    Some(e) => e,
+                    None => {
+                        warn!("CSV is missing the seven_id field for line {}.", i);
+                        errors.push((i, name.to_owned()));
+                        return None;
+                    }
+                };
+                let email = match result.get(2) {
+                    Some(e) => e,
+                    None => {
+                        warn!("CSV is missing the email field for line {}.", i);
+                        errors.push((i, seven_id.to_owned()));
+                        return None;
+                    }
+                };
+                let is_aide = match result.get(3) {
+                    Some(s) => match s.to_lowercase().parse::<bool>() {
+                        Ok(a) => a,
+                        Err(e) => {
+                            warn!(
+                                "Failed to parse {} as boolean! (error {} for {})",
+                                s, e, seven_id
+                            );
+                            errors.push((i, seven_id.to_owned()));
+                            return None;
+                        }
+                    },
+                    None => {
+                        warn!("CSV is missing the is_aide field for line {}.", i);
+                        errors.push((i, seven_id.to_owned()));
+                        return None;
+                    }
+                };
+
+                let now = chrono::offset::Local::now().naive_utc();
+
+                Some(students_without_id {
+                    seven_id: seven_id.to_owned(),
+                    student_name: name.to_owned(),
+                    email: email.to_owned(),
+                    created_at: now,
+                    updated_at: now,
+                    is_aide: is_aide,
+                })
+            }
+            Err(e) => {
+                warn!(
+                    "There was an error while getting csv information! (error {})",
+                    e
+                );
+                errors.push((i, String::from("Unknown")));
+                None
+            }
         })
-        .to_string(),
-    )
+        .collect();
+
+    match std::fs::remove_file(&filepath) {
+        Ok(_) => (),
+        Err(e) => {
+            warn!(
+                "Failed to delete file {} after getting all csv data from it! (error {})",
+                filepath.to_string_lossy(),
+                e
+            );
+        }
+    }
+
+    let affected = match diesel::insert_into(super::schema::students::dsl::students)
+        .values(&insertable_students)
+        .on_conflict_do_nothing()
+        .execute(&connection)
+    {
+        Ok(a) => a,
+        Err(e) => {
+            warn!("Failed to insert new students into database! (error {}", e);
+            return make_json_response!(500, "Internal Server Error");
+        }
+    };
+
+    if errors.len() > 0 || affected == 0 {
+        if insertable_students.len() == 0 || affected == 0 {
+            make_json_response!(400, "Bad Request", errors)
+        } else {
+            make_json_response!(202, "Partial Success", errors)
+        }
+    } else {
+        make_json_response!(200, "Ok")
+    }
 }
