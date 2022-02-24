@@ -8,8 +8,6 @@ services:
       POSTGRES_PASSWORD: postgres_password
       POSTGRES_DB: wgt
     restart: always
-    networks:
-      - net
     healthcheck:
       test: ["CMD-SHELL", "pg_isready"]
       interval: 10s
@@ -26,11 +24,7 @@ services:
     environment:
       DATABASE_URL: postgres://wgt:postgres_password@db/wgt
       SENTRY_DSN: Settings > Project > Client Keys (DSN) > Copy URL
-    networks:
-      - net
+      VUE_APP_ROOT_API: http://localhost:80/api
+      VUE_APP_SENTRY_DSN: Settings > Project > Client Keys (DSN) > Copy URL
     depends_on:
-      db:
-        condition: service_healthy
-networks: 
-  net:
-    driver: bridge
+      - db
