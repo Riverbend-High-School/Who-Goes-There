@@ -1,8 +1,8 @@
 CREATE TABLE students(
     id SERIAL PRIMARY KEY,
-    seven_id VARCHAR(255) NOT NULL,
+    seven_id VARCHAR(255) NOT NULL UNIQUE,
     student_name VARCHAR(255) NOT NULL,
-    email VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
     is_aide BOOLEAN NOT NULL DEFAULT false
