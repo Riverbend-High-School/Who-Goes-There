@@ -102,7 +102,7 @@
                             </div>
 
                             <div class="table_column" v-if="visit.left_at">
-                                <p>{{ visit.left_at }}/p></p>
+                                <p>{{ renderDate(visit.left_at + "Z") }}</p>
                             </div>
                             <div class="table_column" v-else>
                                 <p>Active Visit</p>
