@@ -7,6 +7,8 @@ import Configuration from "@/assets/configuration";
 
 import checkTemplate from "../../components/checkTemplate.vue";
 
+const WGT_LOCATION = Configuration.value("wgtLocation");
+
 Sentry.init({
     app,
     dsn: Configuration.value("sentryDSN"),
@@ -22,7 +24,7 @@ Sentry.init({
 });
 
 const app = createApp(checkTemplate, {
-    title: "Library Sign Out",
+    title: WGT_LOCATION + " Sign Out",
     endpoint: "checkout",
 });
 app.use(VueAxios, axios);

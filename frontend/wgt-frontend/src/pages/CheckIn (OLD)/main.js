@@ -5,9 +5,7 @@ import * as Sentry from "@sentry/vue";
 import { BrowserTracing } from "@sentry/tracing";
 import Configuration from "@/assets/configuration";
 
-import checkTemplate from "../../components/checkTemplate.vue";
-
-const WGT_LOCATION = Configuration.value("wgtLocation");
+import CheckIn from "./CheckIn.vue";
 
 Sentry.init({
     app,
@@ -23,10 +21,7 @@ Sentry.init({
     tracesSampleRate: 1.0,
 });
 
-const app = createApp(checkTemplate, {
-    title: WGT_LOCATION + " Sign In",
-    endpoint: "checkin",
-});
+const app = createApp(CheckIn);
 app.use(VueAxios, axios);
 app.mount("#app");
 
