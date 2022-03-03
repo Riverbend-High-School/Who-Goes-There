@@ -8,6 +8,7 @@ export default class Configuration {
         return {
             rootAPI: "$VUE_APP_ROOT_API",
             sentryDSN: "$VUE_APP_SENTRY_DSN",
+            wgtLocation: "$VUE_APP_WGT_LOCATION",
         };
     }
 
