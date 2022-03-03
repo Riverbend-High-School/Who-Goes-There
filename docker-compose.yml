@@ -22,9 +22,15 @@ services:
       - '80:9999'
     restart: unless-stopped
     environment:
+      # Backend Database URL (Postgres)
       DATABASE_URL: postgres://wgt:postgres_password@db/wgt
+      # Sentry Backend DSN (Settings > Project > Client Keys (DSN) > Copy URL)
       SENTRY_DSN: Settings > Project > Client Keys (DSN) > Copy URL
+      # API URL, (Ex. https://yourdomain.com/api)
       VUE_APP_ROOT_API: http://localhost:80/api
+      # Sentry Frontend DSN (Settings > Project > Client Keys (DSN) > Copy URL)
       VUE_APP_SENTRY_DSN: Settings > Project > Client Keys (DSN) > Copy URL
+      # Location of WGT Installation (Ex. Library)
+      VUE_APP_WGT_LOCATION: Library
     depends_on:
       - db
