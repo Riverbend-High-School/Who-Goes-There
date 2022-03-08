@@ -1,10 +1,11 @@
 extern crate diesel;
 
 use crate::auth::api_key;
-use crate::{make_json_response, model::*};
+use crate::{make_json_response, model::*, unwrap_or_return};
 use regex::Regex;
 use rocket::response::content::Json;
 use rocket::serde::{self, Deserialize};
+use rocket::tokio::io::AsyncReadExt;
 use serde_json::json;
 
 use crate::util::*;
@@ -429,6 +430,74 @@ pub async fn public_visits() -> Json<String> {
     make_json_response!(200, "Found", visits)
 }
 
+#[get("/visits/csv")]
+pub async fn checkout_student_csv(_token: api_key) -> Option<String> {
+    let connection = match crate::create_connection() {
+        Some(c) => c,
+        None => {
+            return None;
+        }
+    };
+
+    let buffer = Vec::new();
+
+    let visits: Vec<visits_with_id> =
+        match super::schema::visits::dsl::visits.get_results::<visits_with_id>(&connection) {
+            Ok(v) => v,
+            Err(e) if e == diesel::NotFound => {
+                // log_warn(format!(
+                //     "Could not find student with id {} (error {})",
+                //     id, e
+                // ));
+                warn!("Failed to get any student from the database! (error {})", e);
+                return None;
+            }
+            Err(e) => {
+                log_warn(format!("Unknown error '{}' while selecting all visits", e));
+                return None;
+            }
+        };
+    let mut writer = csv::Writer::from_writer(buffer);
+
+    unwrap_or_return!(
+        writer.write_record([
+            "id",
+            "student_name",
+            "seven_id",
+            "email",
+            "checked_in",
+            "left_at",
+        ]),
+        "Attempted to write header to buffer in checkout_student_csv but failed!"
+    );
+    visits
+        .iter()
+        .map(|v| visits_with_student::from(v))
+        .for_each(|v| {
+            let student = v.student.unwrap_or_default();
+            let row = vec![
+                v.id.to_string(),
+                student.student_name,
+                student.seven_id,
+                student.email,
+                v.checked_in.to_string(),
+                match v.left_at {
+                    Some(c) => c.to_string(),
+                    None => String::default(),
+                },
+            ];
+            writer.write_record(row).unwrap();
+        });
+    unwrap_or_return!(writer.flush(), "Attempted to flush writer but failed!");
+    Some(unwrap_or_return!(
+        String::from_utf8(unwrap_or_return!(
+            writer.into_inner(),
+            "Attempted to get writer inner but failed!"
+        )),
+        "Failed to open CSV after generating it!"
+    ))
+}
+
 #[get("/student/<id>")]
 pub async fn get_student(id: i32, _token: api_key) -> Json<String> {
     let connection = match crate::create_connection() {
@@ -510,38 +579,23 @@ pub async fn integrate_student_csv(_token: api_key, file: Data<'_>) -> Json<Stri
         }
     };
 
-    let filename = chrono::offset::Local::now().to_rfc3339();
-    let raw_filepath = format!("./csv/{}.csv", filename.replace(':', "").replace('+', ""));
-    let filepath = std::path::Path::new(&raw_filepath);
-
-    let folder = std::path::Path::new("./csv");
-    if !folder.exists() {
-        std::fs::create_dir(folder);
-    }
-
-    match file.open(32u32.megabytes()).into_file(filepath).await {
+    let mut buffer = String::new();
+    match file
+        .open(32u32.megabytes())
+        .read_to_string(&mut buffer)
+        .await
+    {
         Ok(_) => (),
         Err(e) => {
-            warn!(
-                "Failed to write a csv file ({}) for integration with error {}",
-                filepath.to_string_lossy(),
+            log_warn(format!(
+                "Failed to read CSV info into a string with error {}",
                 e
-            );
+            ));
             return make_json_response!(500, "Internal Server Error");
         }
-    }
+    };
 
-    let mut rdr = csv::Reader::from_reader(match std::fs::File::open(filepath) {
-        Ok(f) => f,
-        Err(e) => {
-            warn!(
-                "Failed to open file {} after creating it when integrating student csvs. (error {})",
-                filepath.to_string_lossy(),
-                e
-            );
-            return make_json_response!(500, "Internal Server Error");
-        }
-    });
+    let mut rdr = csv::Reader::from_reader(buffer.as_bytes());
 
     let mut errors: Vec<(usize, String)> = vec![]; // Line number, seven digit ID
 
@@ -614,17 +668,6 @@ pub async fn integrate_student_csv(_token: api_key, file: Data<'_>) -> Json<Stri
             }
         })
         .collect();
-
-    match std::fs::remove_file(&filepath) {
-        Ok(_) => (),
-        Err(e) => {
-            warn!(
-                "Failed to delete file {} after getting all csv data from it! (error {})",
-                filepath.to_string_lossy(),
-                e
-            );
-        }
-    }
 
     let affected = match diesel::insert_into(super::schema::students::dsl::students)
         .values(&insertable_students)
