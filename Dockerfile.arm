@@ -12,7 +12,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # Get Postgres
 RUN apt update
-RUN apt install -y libpq-dev postgresql nodejs npm git libssl-dev
+RUN apt install -y libpq-dev postgresql nodejs npm git libssl-dev musl
 RUN apt update
 RUN npm install -g n
 RUN n stable
@@ -44,6 +44,8 @@ WORKDIR /app
 
 # Build app
 RUN rustup target add armv7-unknown-linux-musleabihf
+ENV REALGCC=arm-linux-gnueabihf-gcc-8
+ENV TARGET_CC=musl-gcc
 RUN cargo build --release --target armv7-unknown-linux-musleabihf
 
 # Build frontend
