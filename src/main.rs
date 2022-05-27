@@ -84,6 +84,7 @@ async fn main() {
                 student::public_visits,
                 student::integrate_student_csv,
                 student::checkout_student_csv,
+                student::get_student_stats
             ],
         )
         .attach(crate::util::CORS)

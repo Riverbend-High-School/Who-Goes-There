@@ -2,6 +2,7 @@ extern crate diesel;
 
 use crate::auth::api_key;
 use crate::{make_json_response, model::*, unwrap_or_return};
+use chrono::prelude::*;
 use regex::Regex;
 use rocket::response::content::RawJson;
 use rocket::serde::{self, Deserialize};
@@ -687,4 +688,127 @@ pub async fn integrate_student_csv(_token: api_key, file: Data<'_>) -> RawJson<S
     } else {
         make_json_response!(200, "Ok")
     }
+}
+
+#[get("/stats")]
+pub async fn get_student_stats() -> RawJson<String> {
+    let connection = match crate::create_connection() {
+        Some(c) => c,
+        None => {
+            return make_json_response!(500, "Internal Server Error");
+        }
+    };
+
+    let visits: Vec<visits_with_id> =
+        match super::schema::visits::dsl::visits.get_results::<visits_with_id>(&connection) {
+            Ok(v) => v,
+            Err(e) => {
+                log_warn(format!("Could not get active visits with error {}", e));
+                return make_json_response!(500, "Internal Server Error");
+            }
+        };
+
+    let now_raw = chrono::offset::Local::now();
+    let now = now_raw.naive_local();
+    let midnight = now_raw
+        .with_hour(0)
+        .unwrap()
+        .with_minute(0)
+        .unwrap()
+        .with_second(0)
+        .unwrap()
+        .with_nanosecond(0)
+        .unwrap()
+        .naive_local();
+    let last_week = midnight - chrono::Duration::days(7);
+    let last_month = midnight - chrono::Duration::days(30);
+    let last_3_months = midnight - chrono::Duration::days(30 * 3);
+
+    let visits_today_vec: Vec<visits_with_id> = visits
+        .iter()
+        .filter(|visit| {
+            if let Some(left_at) = visit.left_at {
+                left_at > midnight
+            } else {
+                true
+            }
+        })
+        .map(|visit| visit.to_owned())
+        .collect();
+    let visits_today = visits_today_vec.len();
+    let hours_today = visits_today_vec.iter().fold(0, |acc, visit| {
+        acc + if let Some(left_at) = visit.left_at {
+            left_at - visit.checked_in
+        } else {
+            now - visit.checked_in
+        }
+        .num_hours()
+    });
+
+    let visits_last_week_vec: Vec<&visits_with_id> = visits
+        .iter()
+        .filter(|visit| visit.checked_in > last_week)
+        .collect();
+    let visits_last_week = visits_last_week_vec.len();
+    let hours_last_week = visits_last_week_vec.iter().fold(0, |acc, visit| {
+        acc + if let Some(left_at) = visit.left_at {
+            left_at - visit.checked_in
+        } else {
+            now - visit.checked_in
+        }
+        .num_hours()
+    });
+
+    let visits_last_month_vec: Vec<&visits_with_id> = visits
+        .iter()
+        .filter(|visit| visit.checked_in > last_month)
+        .collect();
+    let visits_last_month = visits_last_month_vec.len();
+    let hours_last_month = visits_last_month_vec.iter().fold(0, |acc, visit| {
+        acc + if let Some(left_at) = visit.left_at {
+            left_at - visit.checked_in
+        } else {
+            now - visit.checked_in
+        }
+        .num_hours()
+    });
+
+    let visits_last_3_months_vec: Vec<&visits_with_id> = visits
+        .iter()
+        .filter(|visit| visit.checked_in > last_3_months)
+        .collect();
+    let visits_last_3_months = visits_last_3_months_vec.len();
+    let hours_last_3_months = visits_last_3_months_vec.iter().fold(0, |acc, visit| {
+        acc + if let Some(left_at) = visit.left_at {
+            left_at - visit.checked_in
+        } else {
+            now - visit.checked_in
+        }
+        .num_hours()
+    });
+
+    make_json_response!(
+        200,
+        "Ok",
+        json!({
+
+                "today": {
+                    "visits": visits_today,
+                    "hours": hours_today
+                },
+                "last_week": {
+                    "visits": visits_last_week,
+                    "hours": hours_last_week
+                },
+                "last_month": {
+                    "visits": visits_last_month,
+                    "hours": hours_last_month
+                },
+                "last_3_months": {
+                    "visits": visits_last_3_months,
+                    "hours": hours_last_3_months
+                }
+
+        })
+    )
 }
