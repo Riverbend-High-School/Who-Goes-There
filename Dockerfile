@@ -1,6 +1,6 @@
 ## Build Stage
 # Pull base image and update
-FROM rust:slim-buster as builder
+FROM ekidd/rust-musl-builder:stable AS builder
 
 USER root
 
@@ -42,7 +42,7 @@ RUN chown -R "${USER}":"${USER}" /app
 WORKDIR /app
 
 # Build app
-RUN cargo build --release
+RUN cargo build --release --target x86_64-unknown-linux-musl
 
 # Build frontend
 WORKDIR /app/frontend/wgt-frontend
@@ -53,7 +53,7 @@ RUN npm run build
 ####################################################################################################
 ## Final image
 ####################################################################################################
-FROM debian:buster-slim
+FROM alpine:latest
 
 ARG USER=backend
 ARG UID=10001
@@ -61,8 +61,9 @@ ARG UID=10001
 ENV USER=$USER
 ENV UID=$UID
 
-RUN apt update \
-    && apt install tzdata 
+RUN apk update \
+    && apk add --no-cache ca-certificates tzdata \
+    && rm -rf /var/cache/apk/*
 
 # Import from builder.
 COPY --from=builder /etc/passwd /etc/passwd
@@ -71,14 +72,16 @@ COPY --from=builder /etc/group /etc/group
 WORKDIR /app
 
 # Copy our build
-COPY --from=builder /app/target/release/wgt_backend /app/wgt_backend
+COPY --from=builder /app/target/x86_64-unknown-linux-musl/release/wgt_backend /app/wgt_backend
 COPY --from=builder /app/frontend/wgt-frontend/dist/ /app/static
 COPY --from=builder /app/entrypoint.sh /app/entrypoint.sh
 
 RUN chown -R "${USER}":"${USER}" /app
 
 RUN chmod +x /app/entrypoint.sh
-RUN apt install libpq-dev gettext
+RUN apk add --no-cache libpq-dev gettext
+RUN apk add --no-cache --upgrade bash
+RUN rm -rf /var/cache/apk/*
 
 USER $USER:$USER
 
