@@ -36,5 +36,11 @@ module.exports = {
             title: "Error",
             chunks: ["chunk-vendors", "chunk-common", "error"],
         },
+        integrate: {
+            entry: "./src/pages/Integrate/main.js",
+            template: "public/index.html",
+            title: "WGT Integrate",
+            chunks: ["chunk-vendors", "chunk-common", "integrate"],
+        },
     },
 };

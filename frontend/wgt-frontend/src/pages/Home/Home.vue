@@ -15,6 +15,9 @@
                     <a class="link" :href="'/checkout.html?token=' + token"
                         >Checkout</a
                     >
+                    <a class="link" :href="'/integrate.html?token=' + token"
+                        >Integrate CSV</a
+                    >
                 </div>
             </div>
         </div>
