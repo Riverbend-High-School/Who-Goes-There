@@ -4,7 +4,7 @@ use crate::make_json_response;
 use crate::model::*;
 use rocket::http::Status;
 use rocket::request::{self, FromRequest, Request};
-use rocket::response::content::Json;
+use rocket::response::content::RawJson;
 use serde_json::json;
 
 use self::diesel::prelude::*;
@@ -85,7 +85,7 @@ pub async fn login(_key: api_key) -> Status {
 }
 
 #[get("/me")]
-pub async fn me(key: api_key) -> rocket::response::content::Json<String> {
+pub async fn me(key: api_key) -> rocket::response::content::RawJson<String> {
     match get_user(key.0).await {
         Some(u) => make_json_response!(200, "Found", u),
         None => make_json_response!(500, "Internal Server Error"),

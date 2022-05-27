@@ -48,14 +48,14 @@ pub fn log_warn<T: std::fmt::Display>(m: T) {
 #[macro_export]
 macro_rules! make_json_response {
     ($status:expr, $message:expr, $data:expr) => {
-        Json(json!({
+        RawJson(json!({
             "status": $status as i32,
             "message": $message,
             "data": $data,
         }).to_string())
     };
     ($status:expr, $message:expr) => {
-        Json(json!({
+        RawJson(json!({
             "status": $status as i32,
             "message": $message,
         }).to_string())

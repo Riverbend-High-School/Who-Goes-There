@@ -3,7 +3,7 @@ extern crate diesel;
 use crate::auth::api_key;
 use crate::{make_json_response, model::*, unwrap_or_return};
 use regex::Regex;
-use rocket::response::content::Json;
+use rocket::response::content::RawJson;
 use rocket::serde::{self, Deserialize};
 use rocket::tokio::io::AsyncReadExt;
 use serde_json::json;
@@ -27,7 +27,7 @@ pub struct student_post {
 }
 
 #[post("/checkin", format = "application/json", data = "<student>")]
-pub async fn check_in(token: api_key, student: serde::json::Json<student_post>) -> Json<String> {
+pub async fn check_in(token: api_key, student: serde::json::Json<student_post>) -> RawJson<String> {
     let token = token.0;
 
     info!(
@@ -40,7 +40,7 @@ pub async fn check_in(token: api_key, student: serde::json::Json<student_post>) 
     let connection = match crate::create_connection() {
         Some(c) => c,
         None => {
-            return Json(
+            return RawJson(
                 json!({
                     "status": 500,
                     "message": "Internal Server Error"
@@ -74,7 +74,7 @@ pub async fn check_in(token: api_key, student: serde::json::Json<student_post>) 
                     "Student with email '{}' does not exist! (error {})",
                     query, e
                 );
-                return Json(
+                return RawJson(
                     json!({
                         "status": 404,
                         "message": "Email not found in database!"
@@ -100,7 +100,7 @@ pub async fn check_in(token: api_key, student: serde::json::Json<student_post>) 
                     "Student with seven digit id '{}' does not exist! (error {})",
                     query, e
                 );
-                return Json(
+                return RawJson(
                     json!({
                         "status": 404,
                         "message": "7 digit ID not found in database!"
@@ -110,7 +110,7 @@ pub async fn check_in(token: api_key, student: serde::json::Json<student_post>) 
             }
         }
     } else {
-        return Json(
+        return RawJson(
             json!({
                 "status": 400,
                 "message": "Invalid input. Please input your seven digit pin or your email!"
@@ -160,7 +160,7 @@ pub async fn check_in(token: api_key, student: serde::json::Json<student_post>) 
                 "Failed to insert new visit into visits table for student {} ({}). (error {})",
                 student.seven_id, student.email, e
             ));
-            return Json(
+            return RawJson(
                 json!({
                     "status": 500,
                     "message": "Internal Server Error"
@@ -170,7 +170,7 @@ pub async fn check_in(token: api_key, student: serde::json::Json<student_post>) 
         }
     }
 
-    Json(
+    RawJson(
         json!({
             "status": 204,
             "message": "Successfully checked in!"
@@ -180,7 +180,10 @@ pub async fn check_in(token: api_key, student: serde::json::Json<student_post>) 
 }
 
 #[post("/checkout", format = "application/json", data = "<student>")]
-pub async fn check_out(token: api_key, student: serde::json::Json<student_post>) -> Json<String> {
+pub async fn check_out(
+    token: api_key,
+    student: serde::json::Json<student_post>,
+) -> RawJson<String> {
     let token = token.0;
 
     info!(
@@ -193,7 +196,7 @@ pub async fn check_out(token: api_key, student: serde::json::Json<student_post>)
     let connection = match crate::create_connection() {
         Some(c) => c,
         None => {
-            return Json(
+            return RawJson(
                 json!({
                     "status": 500,
                     "message": "Internal Server Error"
@@ -227,7 +230,7 @@ pub async fn check_out(token: api_key, student: serde::json::Json<student_post>)
                     "Student with email '{}' does not exist! (error {})",
                     query, e
                 );
-                return Json(
+                return RawJson(
                     json!({
                         "status": 404,
                         "message": "Email not found in database!"
@@ -253,7 +256,7 @@ pub async fn check_out(token: api_key, student: serde::json::Json<student_post>)
                     "Student with seven digit id '{}' does not exist! (error {})",
                     query, e
                 );
-                return Json(
+                return RawJson(
                     json!({
                         "status": 404,
                         "message": "7 digit ID not found in database!"
@@ -263,7 +266,7 @@ pub async fn check_out(token: api_key, student: serde::json::Json<student_post>)
             }
         }
     } else {
-        return Json(
+        return RawJson(
             json!({
                 "status": 400,
                 "message": "Invalid input"
@@ -298,7 +301,7 @@ pub async fn check_out(token: api_key, student: serde::json::Json<student_post>)
                 "No active visit for student '{}' ({})",
                 student.seven_id, student.email,
             );
-            return Json(
+            return RawJson(
                 json!({
                     "status": 404,
                     "message": "Student has not checked in previously. Please remember to check in when coming into the library!"
@@ -311,7 +314,7 @@ pub async fn check_out(token: api_key, student: serde::json::Json<student_post>)
                 "Error occured while finding active visit for student with id '{}' (error {})",
                 student.id, e,
             ));
-            return Json(
+            return RawJson(
                 json!({
                     "status": 500,
                     "message": "Internal Server Error"
@@ -321,7 +324,7 @@ pub async fn check_out(token: api_key, student: serde::json::Json<student_post>)
         }
     }
 
-    Json(
+    RawJson(
         json!({
             "status": 204,
             "message": "Visit Checked Out"
@@ -331,11 +334,11 @@ pub async fn check_out(token: api_key, student: serde::json::Json<student_post>)
 }
 
 #[get("/visits/all")]
-pub async fn all_visits(_token: api_key) -> Json<String> {
+pub async fn all_visits(_token: api_key) -> RawJson<String> {
     let connection = match crate::create_connection() {
         Some(c) => c,
         None => {
-            return Json(
+            return RawJson(
                 json!({
                     "status": 500,
                     "message": "Internal Server Error"
@@ -350,7 +353,7 @@ pub async fn all_visits(_token: api_key) -> Json<String> {
             Ok(v) => v,
             Err(e) => {
                 log_warn(format!("Could not get active visits with error {}", e));
-                return Json(
+                return RawJson(
                     json!({
                         "status": 500,
                         "message": "Internal Server Error"
@@ -360,7 +363,7 @@ pub async fn all_visits(_token: api_key) -> Json<String> {
             }
         };
 
-    Json(
+    RawJson(
         json!({
             "status": 200,
             "message": "Found",
@@ -371,7 +374,7 @@ pub async fn all_visits(_token: api_key) -> Json<String> {
 }
 
 #[get("/visits")]
-pub async fn visits(_token: api_key) -> Json<String> {
+pub async fn visits(_token: api_key) -> RawJson<String> {
     let connection = match crate::create_connection() {
         Some(c) => c,
         None => return make_json_response!(500, "Internal Server Error"),
@@ -395,7 +398,7 @@ pub async fn visits(_token: api_key) -> Json<String> {
 }
 
 #[get("/visits/public")]
-pub async fn public_visits() -> Json<String> {
+pub async fn public_visits() -> RawJson<String> {
     let connection = match crate::create_connection() {
         Some(c) => c,
         None => return make_json_response!(500, "Internal Server Error"),
@@ -499,7 +502,7 @@ pub async fn checkout_student_csv(_token: api_key) -> Option<String> {
 }
 
 #[get("/student/<id>")]
-pub async fn get_student(id: i32, _token: api_key) -> Json<String> {
+pub async fn get_student(id: i32, _token: api_key) -> RawJson<String> {
     let connection = match crate::create_connection() {
         Some(c) => c,
         None => {
@@ -533,17 +536,11 @@ pub async fn get_student(id: i32, _token: api_key) -> Json<String> {
 }
 
 #[get("/student/all")]
-pub async fn get_all_student(_token: api_key) -> Json<String> {
+pub async fn get_all_student(_token: api_key) -> RawJson<String> {
     let connection = match crate::create_connection() {
         Some(c) => c,
         None => {
-            return Json(
-                json!({
-                    "status": 500,
-                    "message": "Internal Server Error"
-                })
-                .to_string(),
-            )
+            return make_json_response!(500, "Internal Server Error");
         }
     };
 
@@ -571,7 +568,7 @@ pub async fn get_all_student(_token: api_key) -> Json<String> {
 }
 
 #[post("/student/integrate", data = "<file>")]
-pub async fn integrate_student_csv(_token: api_key, file: Data<'_>) -> Json<String> {
+pub async fn integrate_student_csv(_token: api_key, file: Data<'_>) -> RawJson<String> {
     let connection = match crate::create_connection() {
         Some(c) => c,
         None => {
