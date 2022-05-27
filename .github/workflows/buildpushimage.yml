@@ -21,14 +21,6 @@ jobs:
         with:
           username: ${{ secrets.RHS_DOCKERHUB_USERNAME }}
           password: ${{ secrets.RHS_DOCKERHUB_TOKEN }}
-      - name: Build for armv7 and push
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: Dockerfile.arm
-          platforms: linux/armv7
-          push: true
-          tags: riverbendhighschool/who-goes-there:arm
       - name: Build for amd64 and push
         uses: docker/build-push-action@v2
         with:
@@ -37,3 +29,11 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: riverbendhighschool/who-goes-there:dev
+      - name: Build for armv7 and push
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: Dockerfile.arm
+          platforms: linux/armv7
+          push: true
+          tags: riverbendhighschool/who-goes-there:arm
