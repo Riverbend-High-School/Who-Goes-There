@@ -1,6 +1,6 @@
 ## Build Stage
 # Pull base image and update
-FROM ekidd/rust-musl-builder:stable AS builder
+FROM rust:latest AS builder
 
 USER root
 
@@ -12,9 +12,8 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # Get Postgres
 RUN apt update
-RUN apt install -y nodejs-dev node-gyp libssl-dev
-RUN apt install -y libpq-dev postgresql nodejs npm git 
-RUN apt update
+RUN apt install -y libpq-dev postgresql nodejs npm git
+RUN apt install -y 	gcc-arm-linux-gnueabihf libssl-dev
 RUN npm install -g n
 RUN n stable
 RUN npm install -g npm
@@ -44,10 +43,8 @@ RUN chown -R "${USER}":"${USER}" /app
 WORKDIR /app
 
 # Build app
-RUN rustup target add armv7-unknown-linux-musleabihf
-ENV REALGCC=arm-linux-gnueabihf-gcc-8
-ENV TARGET_CC=musl-gcc
-RUN cargo build --release --target armv7-unknown-linux-musleabihf
+RUN rustup target add armv7-unknown-linux-gnueabihf
+RUN cargo build --release --target armv7-unknown-linux-gnueabihf
 
 # Build frontend
 WORKDIR /app/frontend/wgt-frontend
@@ -58,7 +55,7 @@ RUN npm run build
 ####################################################################################################
 ## Final image
 ####################################################################################################
-FROM balenalib/raspberry-pi-alpine:latest
+FROM debian:buster-slim
 
 ARG USER=backend
 ARG UID=10001
@@ -66,9 +63,7 @@ ARG UID=10001
 ENV USER=$USER
 ENV UID=$UID
 
-RUN apk update \
-    && apk add --no-cache ca-certificates tzdata \
-    && rm -rf /var/cache/apk/*
+RUN apt-get update -y && apt-get install -y extra-runtime-dependencies && rm -rf /var/lib/apt/lists/*
 
 # Import from builder.
 COPY --from=builder /etc/passwd /etc/passwd
@@ -77,16 +72,14 @@ COPY --from=builder /etc/group /etc/group
 WORKDIR /app
 
 # Copy our build
-COPY --from=builder /app/target/armv7-unknown-linux-musleabihf/release/wgt_backend /app/wgt_backend
+COPY --from=builder /app/target/release/wgt_backend /app/wgt_backend
 COPY --from=builder /app/frontend/wgt-frontend/dist/ /app/static
 COPY --from=builder /app/entrypoint.sh /app/entrypoint.sh
 
 RUN chown -R "${USER}":"${USER}" /app
 
 RUN chmod +x /app/entrypoint.sh
-RUN apk add --no-cache libpq-dev gettext
-RUN apk add --no-cache --upgrade bash
-RUN rm -rf /var/cache/apk/*
+RUN apt install -y libpq-dev gettext
 
 USER $USER:$USER
 

@@ -16,6 +16,7 @@ regex = "1.5.4"
 lazy_static = "1.4.0"
 sentry = "0.26.0"
 diesel_migrations = "1.4.0"
-openssl = "*"
+openssl = { version = "*", features = ["vendored"] }
 openssl-probe = "0.1.5"
 csv = "1.1"
+
