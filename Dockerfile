@@ -34,7 +34,8 @@ RUN adduser \
     --uid "${UID}" \
     "${USER}"
 
-RUN git clone https://github.com/Riverbend-High-School/wgt-backend.git /app
+# RUN git clone https://github.com/Riverbend-High-School/wgt-backend.git /app
+COPY . /app
 
 RUN chown -R "${USER}":"${USER}" /app
 
