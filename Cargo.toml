@@ -14,8 +14,8 @@ dotenv = "0.15.0"
 chrono = {version = "0.4", features = ["serde"]}
 regex = "1.5.4"
 lazy_static = "1.4.0"
-sentry = "0.24.2"
+sentry = "0.26.0"
 diesel_migrations = "1.4.0"
-openssl = "*"
+openssl = { version = "0.10.40", features = ["vendored"] }
 openssl-probe = "0.1.5"
 csv = "1.1"
