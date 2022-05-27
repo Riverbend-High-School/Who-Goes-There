@@ -398,3 +398,5 @@ pip-selfcheck.json
 
 target/
 Cargo.lock
+dev.docker-compose.yml
+/docker
