@@ -400,3 +400,4 @@ target/
 Cargo.lock
 dev.docker-compose.yml
 /docker
+/static
