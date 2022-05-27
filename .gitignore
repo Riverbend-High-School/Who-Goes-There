@@ -397,7 +397,6 @@ pip-selfcheck.json
 # End of https://www.toptal.com/developers/gitignore/api/jetbrains,pycharm,django,python,venv
 
 target/
-Cargo.lock
 dev.docker-compose.yml
 /docker
 /static
