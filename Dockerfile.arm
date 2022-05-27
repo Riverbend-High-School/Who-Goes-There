@@ -43,6 +43,7 @@ RUN chown -R "${USER}":"${USER}" /app
 WORKDIR /app
 
 # Build app
+RUN rustup target add armv7-unknown-linux-musleabihf
 RUN cargo build --release --target armv7-unknown-linux-musleabihf
 
 # Build frontend
