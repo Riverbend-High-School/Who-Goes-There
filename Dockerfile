@@ -13,7 +13,6 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 # Get Postgres
 RUN apt update
 RUN apt install -y libpq-dev postgresql nodejs npm git
-RUN apt update
 RUN npm install -g n
 RUN n stable
 RUN npm install -g npm
