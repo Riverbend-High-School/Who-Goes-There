@@ -1,6 +1,6 @@
 ## Build Stage
 # Pull base image and update
-FROM rust:1.61.0-slim-buster as builder
+FROM arm32v7/rust:1.61.0-slim-buster as builder
 
 RUN update-ca-certificates
 
@@ -69,7 +69,7 @@ RUN cargo build --release --target armv7-unknown-linux-gnueabihf
 
 # Build frontend
 
-FROM node:lts-slim as frontend
+FROM arm32v7/node:14.19.3-buster-slim as frontend
 
 COPY --from=builder /app/frontend/wgt-frontend /app/frontend
 
@@ -81,7 +81,7 @@ RUN npm run build
 ####################################################################################################
 ## Final image
 ####################################################################################################
-FROM debian:stable-20220527-slim
+FROM arm32v7/debian:buster-20220527-slim
 
 ARG USER=backend
 ARG UID=10001
