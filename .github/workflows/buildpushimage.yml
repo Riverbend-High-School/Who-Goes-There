@@ -26,7 +26,7 @@ jobs:
         with:
           context: .
           file: Dockerfile.arm
-          platforms: linux/armv7
+          platforms: linux/amd64
           push: true
           tags: riverbendhighschool/who-goes-there:arm-linux-gnueabihf
       - name: Build for amd64 and push
