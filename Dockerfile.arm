@@ -81,7 +81,7 @@ RUN npm run build
 ####################################################################################################
 ## Final image
 ####################################################################################################
-FROM alpine:latest
+FROM debian:stable-20220527-slim
 
 ARG USER=backend
 ARG UID=10001
@@ -98,9 +98,12 @@ RUN adduser \
     --uid "${UID}" \
     "${USER}"
 
-RUN apk update \
-    && apk add --no-cache ca-certificates tzdata \
-    && rm -rf /var/cache/apk/*
+RUN apt update -y \
+    && apt install -y gettext bash \
+    && apt-get autoclean 
+
+ENV OSSL_INSTALL_DIR_FINAL=/openssl
+ENV PQ_INSTALL_DIR_FINAL=/postgres
 
 WORKDIR /app
 
@@ -109,12 +112,17 @@ COPY --from=builder /app/target/armv7-unknown-linux-gnueabihf/release/wgt_backen
 COPY --from=frontend /app/frontend/dist/ /app/static
 COPY --from=builder /app/entrypoint.sh /app/entrypoint.sh
 
+COPY --from=builder /openssl/out $OSSL_INSTALL_DIR_FINAL
+COPY --from=builder /postgres/out $PQ_INSTALL_DIR_FINAL
+
+ENV OPENSSL_LIB_DIR=$OSSL_INSTALL_DIR_FINAL/lib \
+    OPENSSL_INCLUDE_DIR=$OSSL_INSTALL_DIR_FINAL/include \
+    PQ_LIB_DIR=$PQ_INSTALL_DIR_FINAL/lib \
+    PQ_INCLUDE_DIR=$PQ_INSTALL_DIR_FINAL/include
+
 RUN chown -R "${USER}":"${USER}" /app
 
 RUN chmod +x /app/entrypoint.sh
-RUN apk add --no-cache libpq-dev gettext
-RUN apk add --no-cache --upgrade bash
-RUN rm -rf /var/cache/apk/*
 
 USER $USER:$USER
 
