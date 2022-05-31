@@ -45,7 +45,12 @@ WORKDIR /app
 RUN cargo build --release --target x86_64-unknown-linux-musl
 
 # Build frontend
-WORKDIR /app/frontend/wgt-frontend
+
+FROM node:lts-alpine as frontend
+
+COPY --from=builder /app/frontend/wgt-frontend /app/frontend
+
+WORKDIR /app/frontend
 
 RUN npm i
 RUN npm run build
@@ -73,7 +78,7 @@ WORKDIR /app
 
 # Copy our build
 COPY --from=builder /app/target/x86_64-unknown-linux-musl/release/wgt_backend /app/wgt_backend
-COPY --from=builder /app/frontend/wgt-frontend/dist/ /app/static
+COPY --from=frontend /app/frontend/dist/ /app/static
 COPY --from=builder /app/entrypoint.sh /app/entrypoint.sh
 
 RUN chown -R "${USER}":"${USER}" /app

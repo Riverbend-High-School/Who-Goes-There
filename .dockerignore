@@ -14,3 +14,4 @@ target/
 frontend/wgt-frontend/node_modules/
 frontend/wgt-frontend/dist/
 static/
+Dockerfile*

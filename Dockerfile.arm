@@ -1,24 +1,88 @@
 ## Build Stage
 # Pull base image and update
-FROM rust:latest AS builder
-
-USER root
+FROM rust:1.61.0-slim-buster as builder
 
 RUN update-ca-certificates
-
 
 ENV TZ=America/New_York
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # Get Postgres
-RUN apt update
-RUN apt install -y libpq-dev postgresql nodejs npm git
-RUN apt install -y 	gcc-arm-linux-gnueabihf libssl-dev
-RUN npm install -g n
-RUN n stable
-RUN npm install -g npm
+RUN apt update -y && apt install -y git \
+    gcc-arm-linux-gnueabihf \
+    g++-arm-linux-gnueabihf \
+    libc6-dev-armhf-cross \
+    libperl-dev \
+    python3-dev \
+    flex \
+    bison \
+    make
 
-# Create app user
+# Get openssl and compile for armv7
+RUN git clone https://github.com/openssl/openssl.git /openssl
+ENV OSSL_INSTALL_DIR=/openssl/out
+
+WORKDIR /openssl
+
+RUN ./Configure linux-generic32 shared \
+    --prefix=$OSSL_INSTALL_DIR --openssldir=$OSSL_INSTALL_DIR/openssl \
+    --cross-compile-prefix=arm-linux-gnueabihf-
+
+RUN make depend
+RUN make
+RUN make install
+
+# Get psql-dev and compile for armv7
+RUN git clone https://github.com/postgres/postgres.git /postgres
+ENV PQ_INSTALL_DIR=/postgres/out
+
+WORKDIR /postgres
+
+RUN ./configure --prefix=$PQ_INSTALL_DIR --host=arm-linux CC=/usr/bin/arm-linux-gnueabihf-gcc AR=/usr/bin/arm-linux-gnueabihf-ar CPP=/usr/bin/arm-linux-gnueabihf-cpp --without-readline --without-zlib --disable-spinlocks
+
+WORKDIR /postgres/src/interfaces/libpq
+
+RUN make
+RUN make install
+
+COPY . /app
+
+RUN chown -R "${USER}":"${USER}" /app
+
+# Move to repo
+WORKDIR /app
+
+# Build app
+RUN rustup target add armv7-unknown-linux-gnueabihf
+RUN rustup toolchain install stable-armv7-unknown-linux-gnueabihf
+
+ENV CARGO_TARGET_ARMV7_UNKNOWN_LINUX_GNUEABIHF_LINKER=arm-linux-gnueabihf-gcc \
+    CC_armv7_unknown_linux_gnueabihf=arm-linux-gnueabihf-gcc \
+    CXX_armv7_unknown_linux_gnueabihf=arm-linux-gnueabihf-g++ \
+    OPENSSL_LIB_DIR=$OSSL_INSTALL_DIR/lib \
+    OPENSSL_INCLUDE_DIR=$OSSL_INSTALL_DIR/include \
+    PQ_LIB_DIR=$PQ_INSTALL_DIR/lib \
+    PQ_INCLUDE_DIR=$PQ_INSTALL_DIR/include
+
+
+RUN cargo build --release --target armv7-unknown-linux-gnueabihf
+
+# Build frontend
+
+FROM node:lts-alpine as frontend
+
+COPY --from=builder /app/frontend/wgt-frontend /app/frontend
+
+WORKDIR /app/frontend
+
+RUN npm i
+RUN npm run build
+
+####################################################################################################
+## Final image
+####################################################################################################
+FROM alpine:latest
+
 ARG USER=backend
 ARG UID=10001
 
@@ -34,52 +98,23 @@ RUN adduser \
     --uid "${UID}" \
     "${USER}"
 
-# RUN git clone https://github.com/Riverbend-High-School/wgt-backend.git /app
-COPY . /app
-
-RUN chown -R "${USER}":"${USER}" /app
-
-# Move to repo
-WORKDIR /app
-
-# Build app
-RUN rustup target add armv7-unknown-linux-gnueabihf
-RUN cargo build --release --target armv7-unknown-linux-gnueabihf
-
-# Build frontend
-WORKDIR /app/frontend/wgt-frontend
-
-RUN npm i
-RUN npm run build
-
-####################################################################################################
-## Final image
-####################################################################################################
-FROM debian:buster-slim
-
-ARG USER=backend
-ARG UID=10001
-
-ENV USER=$USER
-ENV UID=$UID
-
-RUN apt-get update -y && apt-get install -y extra-runtime-dependencies && rm -rf /var/lib/apt/lists/*
-
-# Import from builder.
-COPY --from=builder /etc/passwd /etc/passwd
-COPY --from=builder /etc/group /etc/group
+RUN apk update \
+    && apk add --no-cache ca-certificates tzdata \
+    && rm -rf /var/cache/apk/*
 
 WORKDIR /app
 
 # Copy our build
-COPY --from=builder /app/target/release/wgt_backend /app/wgt_backend
-COPY --from=builder /app/frontend/wgt-frontend/dist/ /app/static
+COPY --from=builder /app/target/armv7-unknown-linux-gnueabihf/release/wgt_backend /app/wgt_backend
+COPY --from=frontend /app/frontend/dist/ /app/static
 COPY --from=builder /app/entrypoint.sh /app/entrypoint.sh
 
 RUN chown -R "${USER}":"${USER}" /app
 
 RUN chmod +x /app/entrypoint.sh
-RUN apt install -y libpq-dev gettext
+RUN apk add --no-cache libpq-dev gettext
+RUN apk add --no-cache --upgrade bash
+RUN rm -rf /var/cache/apk/*
 
 USER $USER:$USER
 
