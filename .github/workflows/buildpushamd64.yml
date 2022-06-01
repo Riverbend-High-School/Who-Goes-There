@@ -1,4 +1,4 @@
-name: Build & Push Docker Image For armv7
+name: Build & Push Docker Image For amd64
 
 on:
   workflow_dispatch:
